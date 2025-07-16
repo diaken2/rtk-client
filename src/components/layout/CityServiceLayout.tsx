@@ -24,7 +24,7 @@ export default function CityServiceLayout({ service, cityName, children, citySlu
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow bg-gray-50">{children}</main>
-      <Footer cityName={citySlug} />
+      <Footer cityName={citySlug || "в России"} />
     </div>
   );
 } 

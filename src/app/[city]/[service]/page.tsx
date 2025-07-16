@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { getServiceData, getAvailableCities, getCityServices, getCityData } from "@/lib/data-service";
 import TariffExplorer from "@/components/blocks/TariffExplorer";
 import CityServiceLayout from "@/components/layout/CityServiceLayout";
@@ -115,14 +116,16 @@ const formattedServiceName = formatServiceName(rawServiceType);
 
 return (
   <CityServiceLayout service={serviceTitle} cityName={cityName} citySlug={city}>
-    <TariffExplorer
-      tariffs={allTariffs} // 👈 здесь все тарифы города
-      cityName={cityName}
-      service={serviceTitle}
-      citySlug={city}
-      titleservice={data.title || service}
-      origservice={service}
-    />
+    <Suspense fallback={<div className="flex justify-center items-center min-h-[400px]">Загрузка тарифов...</div>}>
+      <TariffExplorer
+        tariffs={allTariffs} // 👈 здесь все тарифы города
+        cityName={cityName}
+        service={serviceTitle}
+        citySlug={city}
+        titleservice={data.title || service}
+        origservice={service}
+      />
+    </Suspense>
   </CityServiceLayout>
 );
 }

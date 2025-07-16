@@ -289,7 +289,7 @@ const isAllCategoryActive =
         ...getServiceFiltersForCategory(urlCategory),
       }));
     }
-  }, [searchParams]);
+  }, [searchParams, categoryMapping]);
 
 
 
@@ -403,7 +403,7 @@ function isSameCombination(filters: Filters, combo: Partial<Filters>) {
 }
 const isAllCategory =
   !filters.internet ||
-  (filters.internet === false &&
+  (!filters.internet &&
     (filters.tv || filters.mobile || (!filters.tv && !filters.mobile)));
 
   const handleCategoryChange = (categoryId: string) => {

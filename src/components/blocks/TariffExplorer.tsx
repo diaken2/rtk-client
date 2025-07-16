@@ -273,7 +273,7 @@ setFilters(prev => ({
 ...getServiceFiltersForCategory(origservice),
 }));
 }
-}, [origservice]);
+}, [origservice, categoryMapping]);
 function getTariffTypeKey(type: string): string {
 const hasInternet = /интернет/i.test(type);
 const hasTV = /тв/i.test(type);

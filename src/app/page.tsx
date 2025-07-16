@@ -1088,7 +1088,6 @@ const router = useRouter();
             const slug = cityName
               .toLowerCase()
               .replace(/^(г\.|пгт|село|аул|деревня|поселок|ст-ца|п\.)\s*/i, "")
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .replace(/ё/g, "e")
               .replace(/\s+/g, "-")
               .replace(/[а-я]/g, (c: string) => {
@@ -1124,7 +1123,7 @@ const router = useRouter();
         console.log("Ошибка геолокации", error);
       }
     );
-  }, []);
+  }, [router]);
 
 
 

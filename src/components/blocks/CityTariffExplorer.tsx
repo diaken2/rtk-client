@@ -1,6 +1,5 @@
 "use client";
-import React from "react"
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TariffCard from "@/components/tariff/TariffCard";
 import ContactModal from "@/components/forms/ContactModal";
@@ -251,12 +250,12 @@ export default function CityTariffExplorer({
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const categoryMapping: Record<string, string> = {
+  const categoryMapping = useMemo((): Record<string, string> => ({
     internet: "Интернет",
     "internet-tv": "Интернет + ТВ",
     "internet-mobile": "Интернет + Моб. связь",
     "internet-tv-mobile": "Интернет + ТВ + Моб. связь",
-  };
+  }), []);
   const normalize = (str: string) =>
 str
 .toLowerCase()

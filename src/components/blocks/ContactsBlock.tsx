@@ -274,7 +274,7 @@ export default function ContactsBlock() {
       {/* Блок "Остались вопросы?" */}
       <QuestionsBlock />
       
-      <Footer />
+      <Footer cityName="в России" />
     </>
   );
 } 

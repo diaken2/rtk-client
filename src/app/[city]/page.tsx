@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import CityServiceLayout from '@/components/layout/CityServiceLayout'
 import { getCityData, getAvailableCities } from '@/lib/data-service'
 import CityTariffExplorer from '@/components/blocks/CityTariffExplorer'
@@ -47,12 +48,13 @@ export default async function CityPage({ params }: { params: { city: string } })
 
   return (
     <CityServiceLayout service="home" cityName={data.meta.name} citySlug={city}>
-
-      <CityTariffExplorer
-        tariffs={tariffsData}
-        cityName={data.meta.name}
-        citySlug={city}
-      />
+      <Suspense fallback={<div className="flex justify-center items-center min-h-[400px]">Загрузка тарифов...</div>}>
+        <CityTariffExplorer
+          tariffs={tariffsData}
+          cityName={data.meta.name}
+          citySlug={city}
+        />
+      </Suspense>
     </CityServiceLayout>
   )
 }

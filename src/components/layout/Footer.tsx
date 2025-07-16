@@ -2,7 +2,7 @@ import Link from "next/link";
 import Logo from '@/components/ui/Logo';
 import { useSupportOnly } from '@/context/SupportOnlyContext';
 
-export default function Footer({cityName}) {
+export default function Footer({ cityName }: { cityName: string }) {
   let isSupportOnly = false;
   try {
     const context = useSupportOnly();

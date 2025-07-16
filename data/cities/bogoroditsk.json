@@ -1,0 +1,825 @@
+{
+  "meta": {
+    "name": "г. Богородицк",
+    "region": "Тульская область",
+    "timezone": "Europe/Moscow"
+  },
+  "services": {
+    "internet": {
+      "id": "internet",
+      "title": "Интернет",
+      "description": "Тарифы на интернет",
+      "meta": {
+        "description": "Тарифы на интернет",
+        "keywords": [
+          "Интернет"
+        ],
+        "ogImage": "/og/default.jpg"
+      },
+      "tariffs": [
+        {
+          "id": 1,
+          "name": "Технологии доступа Макси 300",
+          "type": "Интернет",
+          "speed": 300,
+          "technology": "GPON",
+          "price": 800,
+          "iconInternet": "/icons/ethernet.svg",
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 2,
+          "name": "Технологии доступа Тест-драйв",
+          "type": "Интернет",
+          "speed": 100,
+          "technology": "FTTB",
+          "price": 700,
+          "iconInternet": "/icons/ethernet.svg",
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru",
+            "Оборудование и услуга «Гарантия+» бесплатно 1 месяц"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 6,
+          "name": "Технологии доступа Тест-драйв",
+          "type": "Интернет",
+          "speed": 200,
+          "technology": "GPON",
+          "price": 700,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru",
+            "Оборудование и услуга «Гарантия+» бесплатно 1 месяц"
+          ],
+          "isHit": true,
+          "buttonColor": "purple"
+        },
+        {
+          "id": 13,
+          "name": "Технологии доступа Макси 500",
+          "type": "Интернет",
+          "speed": 500,
+          "technology": "GPON",
+          "price": 900,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 15,
+          "name": "Игровой",
+          "type": "Интернет",
+          "speed": 700,
+          "technology": "GPON",
+          "price": 950,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры",
+            "Wi-Fi роутер — 150 ₽/мес в аренду"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 21,
+          "name": "Технологии доступа Макси 500",
+          "type": "Интернет",
+          "speed": 500,
+          "technology": "FTTB",
+          "price": 900,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 25,
+          "name": "Игровой",
+          "type": "Интернет",
+          "speed": 500,
+          "technology": "FTTB",
+          "price": 950,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        }
+      ]
+    },
+    "internet-tv": {
+      "id": "internet-tv",
+      "title": "Интернет + ТВ",
+      "description": "Тарифы на интернет + тв",
+      "meta": {
+        "description": "Тарифы на интернет + тв",
+        "keywords": [
+          "Интернет + ТВ"
+        ],
+        "ogImage": "/og/default.jpg"
+      },
+      "tariffs": [
+        {
+          "id": 3,
+          "name": "Технологии развлечения Макси 300",
+          "type": "Интернет + ТВ",
+          "speed": 300,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "price": 850,
+          "iconInternet": "/icons/ethernet.svg",
+          "iconTV": "/icons/tv.svg",
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 4,
+          "name": "Технологии развлечения Тест-драйв",
+          "type": "Интернет + ТВ",
+          "speed": 100,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "price": 800,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru",
+            "Оборудование и услуга «Гарантия+» бесплатно 1 месяц"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 7,
+          "name": "Технологии развлечения Тест-драйв",
+          "type": "Интернет + ТВ",
+          "speed": 200,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "price": 800,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru",
+            "Оборудование и услуга «Гарантия+» бесплатно 1 месяц"
+          ],
+          "isHit": true,
+          "buttonColor": "purple"
+        },
+        {
+          "id": 11,
+          "name": "Технологии развлечения Макси 500",
+          "type": "Интернет + ТВ",
+          "speed": 500,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "price": 950,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 12,
+          "name": "Игровой",
+          "type": "Интернет + ТВ",
+          "speed": 700,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "price": 1150,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 16,
+          "name": "Технологии развлечения Макси 300",
+          "type": "Интернет + ТВ",
+          "speed": 300,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "price": 850,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 19,
+          "name": "Технологии развлечения Макси 500",
+          "type": "Интернет + ТВ",
+          "speed": 500,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "price": 950,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "+8 ГБ облачного хранилища от Mail.ru"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 24,
+          "name": "Игровой",
+          "type": "Интернет + ТВ",
+          "speed": 500,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "price": 1150,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        }
+      ]
+    },
+    "internet-tv-mobile": {
+      "id": "internet-tv-mobile",
+      "title": "Интернет + ТВ + Моб. связь",
+      "description": "Тарифы на интернет + тв + моб. связь",
+      "meta": {
+        "description": "Тарифы на интернет + тв + моб. связь",
+        "keywords": [
+          "Интернет + ТВ + Моб. связь"
+        ],
+        "ogImage": "/og/default.jpg"
+      },
+      "tariffs": [
+        {
+          "id": 5,
+          "name": "Технологии выгоды Тест-драйв",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 250,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 950,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Перенос остатков минут и ГБ"
+          ],
+          "isHit": true,
+          "buttonColor": "purple"
+        },
+        {
+          "id": 14,
+          "name": "Технологии выгоды Тест-драйв",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 950,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 18,
+          "name": "Технологии выгоды Семейный",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 500,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 1200,
+          "discountPrice": 600,
+          "discountPeriod": "первые 2 месяца",
+          "discountPercentage": 50,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 20,
+          "name": "Технологии выгоды Тест-драйв",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 250,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 1200,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 23,
+          "name": "Технологии выгоды Тест-драйв",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 950,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 26,
+          "name": "Игровой 4в1",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 700,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 1400,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 30,
+          "name": "Технологии выгоды Семейный",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 1200,
+          "discountPrice": 600,
+          "discountPeriod": "первые 2 месяца",
+          "discountPercentage": 50,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 31,
+          "name": "Технологии выгоды+ Тест-драйв",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 1200,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 33,
+          "name": "Игровой 4в1+",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 700,
+          "technology": "GPON",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 1600,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 35,
+          "name": "Игровой 4в1",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 500,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 1400,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 38,
+          "name": "Игровой 4в1+",
+          "type": "Интернет + ТВ + Моб. связь",
+          "speed": 500,
+          "technology": "FTTB",
+          "tvChannels": 210,
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 1600,
+          "features": [
+            "Wink (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        }
+      ]
+    },
+    "internet-mobile": {
+      "id": "internet-mobile",
+      "title": "Интернет + Моб. связь",
+      "description": "Тарифы на интернет + моб. связь",
+      "meta": {
+        "description": "Тарифы на интернет + моб. связь",
+        "keywords": [
+          "Интернет + Моб. связь"
+        ],
+        "ogImage": "/og/default.jpg"
+      },
+      "tariffs": [
+        {
+          "id": 8,
+          "name": "Технологии общения Тест-драйв",
+          "type": "Интернет + Моб. связь",
+          "speed": 250,
+          "technology": "GPON",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 800,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "isHit": true,
+          "buttonColor": "purple"
+        },
+        {
+          "id": 9,
+          "name": "Технологии общения Семейный",
+          "type": "Интернет + Моб. связь",
+          "speed": 500,
+          "technology": "GPON",
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 950,
+          "discountPrice": 475,
+          "discountPeriod": "первые 2 месяца",
+          "discountPercentage": 50,
+          "features": [
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 10,
+          "name": "Технологии общения Тест-драйв",
+          "type": "Интернет + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 800,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 17,
+          "name": "Технологии общения Тест-драйв",
+          "type": "Интернет + Моб. связь",
+          "speed": 250,
+          "technology": "GPON",
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 950,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 22,
+          "name": "Технологии общения Тест-драйв",
+          "type": "Интернет + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 800,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 27,
+          "name": "Игровой 2в1",
+          "type": "Интернет + Моб. связь",
+          "speed": 700,
+          "technology": "GPON",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 1200,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 28,
+          "name": "Технологии общения Семейный",
+          "type": "Интернет + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 950,
+          "discountPrice": 475,
+          "discountPeriod": "первые 2 месяца",
+          "discountPercentage": 50,
+          "features": [
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 29,
+          "name": "Технологии общения Тест-драйв",
+          "type": "Интернет + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "mobileData": 40,
+          "mobileMinutes": 2000,
+          "price": 950,
+          "discountPrice": 0,
+          "discountPeriod": "первый месяц",
+          "discountPercentage": 100,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "purple"
+        },
+        {
+          "id": 32,
+          "name": "Технологии общения+",
+          "type": "Интернет + Моб. связь",
+          "speed": 100,
+          "technology": "FTTB",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 950,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 34,
+          "name": "Игровой 2в1+",
+          "type": "Интернет + Моб. связь",
+          "speed": 700,
+          "technology": "GPON",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 1400,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 36,
+          "name": "Игровой 2в1+",
+          "type": "Интернет + Моб. связь",
+          "speed": 700,
+          "technology": "GPON",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 1400,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 150 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 37,
+          "name": "Игровой 2в1",
+          "type": "Интернет + Моб. связь",
+          "speed": 500,
+          "technology": "FTTB",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 1200,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        },
+        {
+          "id": 39,
+          "name": "Игровой 2в1+",
+          "type": "Интернет + Моб. связь",
+          "speed": 500,
+          "technology": "FTTB",
+          "mobileData": 40,
+          "mobileMinutes": 1000,
+          "price": 1400,
+          "features": [
+            "Wink на 180 дней (25 000 фильмов и сериалов)",
+            "Перенос остатков минут и ГБ",
+            "Wi-Fi роутер — 100 ₽/мес в аренду",
+            "Бесплатный доступ к Одноклассники и ВКонтакте",
+            "Бесплатный доступ к мессенджерам WhatsApp, Telegram, TamTam",
+            "Бонусы в играх от 4GAME",
+            "Бонусы в играх от VK Play",
+            "Бонусы в играх от Леста Игры"
+          ],
+          "buttonColor": "orange"
+        }
+      ]
+    }
+  }
+}

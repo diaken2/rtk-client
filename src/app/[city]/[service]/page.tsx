@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getServiceData, getAvailableCities, getCityServices, getCityData } from "@/lib/data-service";
+import { getServiceData, getAvailableCities, getCityServices } from "@/lib/data-service";
 import TariffExplorer from "@/components/blocks/TariffExplorer";
 import CityServiceLayout from "@/components/layout/CityServiceLayout";
 
 export const revalidate = 3600;
+
 function formatServiceName(type: string): string {
   const parts = type
     .toLowerCase()
@@ -33,21 +34,21 @@ function formatServiceName(type: string): string {
 
   return type; // fallback
 }
+
 export async function generateMetadata({ params }: { params: { city: string; service: string } }) {
   const { city, service } = params;
   
-  const cityData = await getCityData(city);
   const data = await getServiceData(city, service);
 
-  if (!cityData || !data) {
+  if (!data) {
     return {
       title: 'Тарифы не найдены',
       description: 'Указанная услуга или город не найдены.',
     };
   }
 
-  const cityName = cityData.meta.name || city;
-  const serviceTitle = data.title || service;
+  const cityName = data.cityName || city;
+  const serviceTitle = data.service.title || service;
 
   let title = "";
   let description = "";
@@ -83,49 +84,50 @@ export async function generateMetadata({ params }: { params: { city: string; ser
     },
   };
 }
+
 export async function generateStaticParams() {
-  const cities = await getAvailableCities();
-  const params = [];
-  for (const city of cities) {
-    const services = await getCityServices(city);
-    for (const service of services) {
-      params.push({ city, service });
+  try {
+    const cities = await getAvailableCities();
+    const params = [];
+    
+    // Ограничим количество городов для статической генерации
+    const limitedCities = cities.slice(0, 50); // например, первые 50 городов
+    
+    for (const city of limitedCities) {
+      const services = await getCityServices(city);
+      for (const service of services) {
+        params.push({ city, service });
+      }
     }
+    return params;
+  } catch (err) {
+    console.error("Ошибка при генерации статических параметров:", err);
+    return [];
   }
-  return params;
 }
 
-export default async function ServicePage({ params }: { params: { city: string; service: string } }){
+export default async function ServicePage({ params }: { params: { city: string; service: string } }) {
   const { city, service } = params;
 
   const data = await getServiceData(city, service);
   if (!data) return notFound();
 
-const cityData = await getCityData(city);
-if (!cityData) return notFound();
+  const cityName = data.cityName;
+  const serviceTitle = formatServiceName(data.service?.tariffs?.[0]?.type || service);
+  const tariffs = data.service?.tariffs || [];
 
-const cityName = cityData.meta.name;
-const serviceTitle = formatServiceName(data?.tariffs?.[0]?.type || service);
-const allTariffs = Object.values(cityData.services).flatMap((s:any) => s.tariffs);
-  console.log('sdsd')     // например "Интернет"
-console.log('титл',serviceTitle)
-// внутри ServicePage
-const rawServiceType = data.tariffs[0]?.type || serviceTitle;
-const formattedServiceName = formatServiceName(rawServiceType);
-
-
-return (
-  <CityServiceLayout service={serviceTitle} cityName={cityName} citySlug={city}>
-    <Suspense fallback={<div className="flex justify-center items-center min-h-[400px]">Загрузка тарифов...</div>}>
-      <TariffExplorer
-        tariffs={allTariffs} // 👈 здесь все тарифы города
-        cityName={cityName}
-        service={serviceTitle}
-        citySlug={city}
-        titleservice={data.title || service}
-        origservice={service}
-      />
-    </Suspense>
-  </CityServiceLayout>
-);
+  return (
+    <CityServiceLayout service={serviceTitle} cityName={cityName} citySlug={city}>
+      <Suspense fallback={<div className="flex justify-center items-center min-h-[400px]">Загрузка тарифов...</div>}>
+        <TariffExplorer
+          tariffs={tariffs} // 👈 теперь только тарифы для конкретного сервиса
+          cityName={cityName}
+          service={serviceTitle}
+          citySlug={city}
+          titleservice={data.service.title || service}
+          origservice={service}
+        />
+      </Suspense>
+    </CityServiceLayout>
+  );
 }

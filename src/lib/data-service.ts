@@ -48,44 +48,63 @@ const DATA_DIR = path.join(process.cwd(), 'data', 'cities');
 const cache = new Map<string, CityData>();
 
 export async function getCityData(slug: string) {
-try {
-const res = await fetch(`https://rtk-backend-4m0e.onrender.com/api/tariffs/${slug}`, {
-cache: 'no-store',
-});
-if (!res.ok) return null;
-const data = await res.json();
+  try {
+    const res = await fetch(`https://rtk-backend-4m0e.onrender.com/api/tariffs/${slug}`, {
+      cache: 'no-store',
+    });
+    
+    if (!res.ok) return null;
+    const data = await res.json();
 
-// 🔍 Отфильтровываем скрытые тарифы
-if (data?.services) {
-  for (const category in data.services) {
-    data.services[category].tariffs = (data.services[category].tariffs || []).filter((t:any) => !t.hidden);
+    // 🔍 Отфильтровываем скрытые тарифы
+    if (data?.services) {
+      for (const category in data.services) {
+        data.services[category].tariffs = (data.services[category].tariffs || []).filter((t:any) => !t.hidden);
+      }
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Ошибка при получении данных:", err);
+    return null;
+  }
+}
+export async function getServiceData(city: string, service: string): Promise<{ 
+  cityName: string; 
+  service: ServiceData 
+} | null> {
+  try {
+    const res = await fetch(`https://rtk-backend-4m0e.onrender.com/api/tariffs/${city}/${service}`, {
+      cache: 'no-store',
+    });
+    
+    if (!res.ok) return null;
+    const data = await res.json();
+    
+    // Фильтруем скрытые тарифы
+    if (data?.service?.tariffs) {
+      data.service.tariffs = data.service.tariffs.filter((t: any) => !t.hidden);
+    }
+    
+    return data;
+  } catch (err) {
+    console.error("Ошибка при получении данных сервиса:", err);
+    return null;
   }
 }
 
-return data;
-} catch (err) {
-console.error("Ошибка при получении данных:", err);
-return null;
-}
-}
-export async function getServiceData(city: string, service: string): Promise<ServiceData | null> {
-  const cityData = await getCityData(city);
-  return cityData?.services[service] || null;
-}
-
 export async function getAvailableCities() {
-try {
-const res = await fetch(`https://rtk-backend-4m0e.onrender.com/api/tariffs`, {
-cache: 'no-store',
-});
-if (!res.ok) return [];
-const data = await res.json();
-console.log(data)
-return data.map((item: any) => item.slug);
-} catch (err) {
-console.error("Ошибка при получении списка городов:", err);
-return [];
-}
+  try {
+    const res = await fetch(`https://rtk-backend-4m0e.onrender.com/api/tariffs`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.map((item: any) => item.slug);
+  } catch (err) {
+    console.error("Ошибка при получении списка городов:", err);
+    return [];
+  }
 }
 
 export async function getCityServices(city: string): Promise<string[]> {

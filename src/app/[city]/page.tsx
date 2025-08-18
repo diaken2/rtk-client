@@ -1,19 +1,10 @@
-
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import CityServiceLayout from '@/components/layout/CityServiceLayout'
-import { getCityData, getAvailableCities } from '@/lib/data-service'
+import { getCityData } from '@/lib/data-service'
 import CityTariffExplorer from '@/components/blocks/CityTariffExplorer'
 
-
 export const dynamic = 'force-dynamic';
-
-type CityType = { id: string; name: string }; // Пример типа
-export async function generateStaticParams() {
-  const cities: CityType[] = await getAvailableCities();
-  return cities.map((city) => ({ city: city.id })); // или другой нужный параметр
-}
-
 
 export async function generateMetadata({ params }: { params: { city: string } }) {
   const citySlug = params.city.toLowerCase();

@@ -49,7 +49,7 @@ const cache = new Map<string, CityData>();
 
 export async function getCityData(slug: string) {
 try {
-const res = await fetch(`http://localhost:8888/api/tariffs/${slug}`, {
+const res = await fetch(`https://rtk-backend-4m0e.onrender.com/api/tariffs/${slug}`, {
 cache: 'no-store',
 });
 if (!res.ok) return null;
@@ -75,7 +75,7 @@ export async function getServiceData(city: string, service: string): Promise<Ser
 
 export async function getAvailableCities() {
 try {
-const res = await fetch(`http://localhost:8888/api/tariffs`, {
+const res = await fetch(`https://rtk-backend-4m0e.onrender.com/api/tariffs`, {
 cache: 'no-store',
 });
 if (!res.ok) return [];

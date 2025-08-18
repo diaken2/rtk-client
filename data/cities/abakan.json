@@ -23,7 +23,7 @@
           "type": "Интернет",
           "speed": 300,
           "technology": "GPON",
-          "price": 700,
+          "price": 600,
           "iconInternet": "/icons/ethernet.svg",
           "features": [
             "Wink на 180 дней (25 000 фильмов и сериалов)",

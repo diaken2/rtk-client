@@ -1,14 +1,17 @@
+
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import CityServiceLayout from '@/components/layout/CityServiceLayout'
 import { getCityData, getAvailableCities } from '@/lib/data-service'
 import CityTariffExplorer from '@/components/blocks/CityTariffExplorer'
 
-export const revalidate = 3600
 
+export const dynamic = 'force-dynamic';
+
+type CityType = { id: string; name: string }; // Пример типа
 export async function generateStaticParams() {
-  const cities = await getAvailableCities()
-  return cities.map(city => ({ city }))
+  const cities: CityType[] = await getAvailableCities();
+  return cities.map((city) => ({ city: city.id })); // или другой нужный параметр
 }
 
 
@@ -44,7 +47,7 @@ export default async function CityPage({ params }: { params: { city: string } })
   const data = await getCityData(city)
   if (!data) return notFound()
 
-  const tariffsData = Object.values(data.services).flatMap(s => s.tariffs)
+  const tariffsData = Object.values(data.services).flatMap((s:any) => s.tariffs)
 
   return (
     <CityServiceLayout service="home" cityName={data.meta.name} citySlug={city}>

@@ -341,6 +341,29 @@ return categoryMatch && sidebarMatch && promoMatch && hitsMatch && priceMatch &&
 });
 }, [tariffs, filters, activeCategory]);
 
+
+
+const sortedTariffs = useMemo(() => {
+  const tariffsToSort = [...filteredTariffs];
+  
+  switch (sortBy) {
+    case 'speed':
+      return tariffsToSort.sort((a, b) => (b.speed || 0) - (a.speed || 0));
+    case 'price-low':
+      return tariffsToSort.sort((a, b) => (a.price || 0) - (b.price || 0));
+    case 'price-high':
+      return tariffsToSort.sort((a, b) => (b.price || 0) - (a.price || 0));
+    case 'popular':
+    default:
+      // Сортировка по популярности (хиты идут первыми)
+      return tariffsToSort.sort((a, b) => {
+        if (a.isHit && !b.isHit) return -1;
+        if (!a.isHit && b.isHit) return 1;
+        return 0;
+      });
+  }
+}, [filteredTariffs, sortBy]);
+
  const handleFilterChange = (newFilters: Partial<Filters>) => {
 setFilters((prev) => {
 const updated = { ...prev, ...newFilters };
@@ -536,7 +559,7 @@ className={`px-4 py-2 rounded-full text-sm font-medium transition ${ isActiveCat
               <h2 className="text-2xl font-bold">
                 Доступные тарифы 
                 <span className="text-lg font-normal text-gray-600 ml-2">
-                  ({filteredTariffs.length})
+                  ({sortedTariffs.length})
                 </span>
               </h2>
               <div className="flex items-center gap-2">
@@ -566,15 +589,15 @@ className={`px-4 py-2 rounded-full text-sm font-medium transition ${ isActiveCat
               </div>
             </div>
 
-          {filteredTariffs.length > 0 ? (
+          {sortedTariffs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredTariffs.slice(0, visibleCount).map((tariff) => (
-                <TariffCard
-                  key={tariff.id}
-                  tariff={tariff}
-                  onClick={() => setIsSegmentationModalOpen(true)}
-                />
-              ))}
+           {sortedTariffs.slice(0, visibleCount).map((tariff) => (
+  <TariffCard
+    key={tariff.id}
+    tariff={tariff}
+    onClick={() => setIsSegmentationModalOpen(true)}
+  />
+))}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -589,9 +612,9 @@ className={`px-4 py-2 rounded-full text-sm font-medium transition ${ isActiveCat
               </button>
             </div>
           )}
-          {visibleCount < filteredTariffs.length && (
+          {visibleCount < sortedTariffs.length && (
             <div className="text-center mt-6">
-              <button className="btn-secondary" onClick={() => setVisibleCount(prev => Math.min(prev + 5, filteredTariffs.length))}>
+              <button className="btn-secondary" onClick={() => setVisibleCount(prev => Math.min(prev + 5, sortedTariffs.length))}>
                 Показать ещё
               </button>
             </div>

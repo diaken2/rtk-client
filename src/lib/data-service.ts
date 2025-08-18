@@ -47,32 +47,45 @@ export interface CityData {
 const DATA_DIR = path.join(process.cwd(), 'data', 'cities');
 const cache = new Map<string, CityData>();
 
-export async function getCityData(city: string): Promise<CityData | null> {
-  if (cache.has(city)) return cache.get(city)!;
-  try {
-    const filePath = path.join(DATA_DIR, `${city}.json`);
-    const data = await fs.readFile(filePath, 'utf-8');
-    const json: CityData = JSON.parse(data);
-    if (!json.meta || !json.services) throw new Error(`Invalid data structure for ${city}`);
-    cache.set(city, json);
-    return json;
-  } catch {
-    return null;
+export async function getCityData(slug: string) {
+try {
+const res = await fetch(`http://localhost:8888/api/tariffs/${slug}`, {
+cache: 'no-store',
+});
+if (!res.ok) return null;
+const data = await res.json();
+
+// 🔍 Отфильтровываем скрытые тарифы
+if (data?.services) {
+  for (const category in data.services) {
+    data.services[category].tariffs = (data.services[category].tariffs || []).filter((t:any) => !t.hidden);
   }
 }
 
+return data;
+} catch (err) {
+console.error("Ошибка при получении данных:", err);
+return null;
+}
+}
 export async function getServiceData(city: string, service: string): Promise<ServiceData | null> {
   const cityData = await getCityData(city);
   return cityData?.services[service] || null;
 }
 
-export async function getAvailableCities(): Promise<string[]> {
-  try {
-    const files = await fs.readdir(DATA_DIR);
-    return files.filter(f => f.endsWith('.json')).map(f => f.replace('.json', ''));
-  } catch {
-    return [];
-  }
+export async function getAvailableCities() {
+try {
+const res = await fetch(`http://localhost:8888/api/tariffs`, {
+cache: 'no-store',
+});
+if (!res.ok) return [];
+const data = await res.json();
+console.log(data)
+return data.map((item: any) => item.slug);
+} catch (err) {
+console.error("Ошибка при получении списка городов:", err);
+return [];
+}
 }
 
 export async function getCityServices(city: string): Promise<string[]> {

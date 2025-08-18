@@ -106,7 +106,7 @@ if (!cityData) return notFound();
 
 const cityName = cityData.meta.name;
 const serviceTitle = formatServiceName(data?.tariffs?.[0]?.type || service);
-const allTariffs = Object.values(cityData.services).flatMap((s) => s.tariffs);
+const allTariffs = Object.values(cityData.services).flatMap((s:any) => s.tariffs);
   console.log('sdsd')     // например "Интернет"
 console.log('титл',serviceTitle)
 // внутри ServicePage

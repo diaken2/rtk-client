@@ -1,6 +1,6 @@
 import { getAvailableCities, getCityServices } from './data-service';
 
-let validCities: string[] | null = null;
+let validCities: string[];
 const cityServicesCache = new Map<string, string[]>();
 
 export async function isValidCity(city: string): Promise<boolean> {

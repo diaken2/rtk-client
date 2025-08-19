@@ -121,7 +121,7 @@ export default async function ServicePage({ params }: { params: { city: string; 
   const serviceTitle = formatServiceName(serviceData?.tariffs?.[0]?.type || service);
   
   // Получаем ВСЕ тарифы города
-  const allTariffs = Object.values(cityData.services).flatMap((s) => s.tariffs);
+  const allTariffs = Object.values(cityData.services).flatMap((s:any) => s.tariffs);
 
   // Фильтруем тарифы для текущего сервиса (только для первоначального отображения)
   const initialTariffs = serviceData.tariffs || [];

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getServiceData, getAvailableCities, getCityServices } from "@/lib/data-service";
+import { getServiceData, getAvailableCities, getCityServices, getCityData } from "@/lib/data-service";
 import TariffExplorer from "@/components/blocks/TariffExplorer";
 import CityServiceLayout from "@/components/layout/CityServiceLayout";
 
@@ -109,22 +109,32 @@ export async function generateStaticParams() {
 export default async function ServicePage({ params }: { params: { city: string; service: string } }) {
   const { city, service } = params;
 
-  const data = await getServiceData(city, service);
-  if (!data) return notFound();
+  // Получаем ВСЕ данные города
+  const cityData = await getCityData(city);
+  if (!cityData) return notFound();
 
-  const cityName = data.cityName;
-  const serviceTitle = formatServiceName(data.service?.tariffs?.[0]?.type || service);
-  const tariffs = data.service?.tariffs || [];
+  // Проверяем, что запрошенный сервис существует
+  const serviceData = cityData.services[service];
+  if (!serviceData) return notFound();
+
+  const cityName = cityData.meta.name;
+  const serviceTitle = formatServiceName(serviceData?.tariffs?.[0]?.type || service);
+  
+  // Получаем ВСЕ тарифы города
+  const allTariffs = Object.values(cityData.services).flatMap((s) => s.tariffs);
+
+  // Фильтруем тарифы для текущего сервиса (только для первоначального отображения)
+  const initialTariffs = serviceData.tariffs || [];
 
   return (
     <CityServiceLayout service={serviceTitle} cityName={cityName} citySlug={city}>
       <Suspense fallback={<div className="flex justify-center items-center min-h-[400px]">Загрузка тарифов...</div>}>
         <TariffExplorer
-          tariffs={tariffs} // 👈 теперь только тарифы для конкретного сервиса
+          tariffs={allTariffs} // Передаем все тарифы города
           cityName={cityName}
-          service={serviceTitle}
           citySlug={city}
-          titleservice={data.service.title || service}
+          service={serviceTitle}
+          titleservice={serviceData.title || service}
           origservice={service}
         />
       </Suspense>

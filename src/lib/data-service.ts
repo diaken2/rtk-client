@@ -53,13 +53,18 @@ export async function getCityData(slug: string) {
       cache: 'no-store',
     });
     
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error('Failed to fetch city data:', res.status);
+      return null;
+    }
+    
     const data = await res.json();
 
     // 🔍 Отфильтровываем скрытые тарифы
     if (data?.services) {
       for (const category in data.services) {
-        data.services[category].tariffs = (data.services[category].tariffs || []).filter((t:any) => !t.hidden);
+        data.services[category].tariffs = (data.services[category].tariffs || [])
+          .filter((t: any) => !t.hidden);
       }
     }
 
@@ -93,12 +98,17 @@ export async function getServiceData(city: string, service: string): Promise<{
   }
 }
 
-export async function getAvailableCities() {
+export async function getAvailableCities(): Promise<string[]> {
   try {
     const res = await fetch(`https://rtk-backend-4m0e.onrender.com/api/tariffs`, {
       cache: 'no-store',
     });
-    if (!res.ok) return [];
+    
+    if (!res.ok) {
+      console.error('Failed to fetch cities:', res.status);
+      return [];
+    }
+    
     const data = await res.json();
     return data.map((item: any) => item.slug);
   } catch (err) {

@@ -6,8 +6,8 @@ import SetCityEffect from '@/components/layout/SetCityEffect';
 export const revalidate = 3600;
 type CityType = { id: string; name: string }; // Пример типа
 export async function generateStaticParams() {
-  const cities: CityType[] = await getAvailableCities();
-  return cities.map((city) => ({ city: city.id })); // или другой нужный параметр
+  const cities: any = await getAvailableCities();
+  return cities.map((city:any) => ({ city: city.id })); // или другой нужный параметр
 }
 
 export async function generateMetadata({ params }: { params: { city: string } }) {

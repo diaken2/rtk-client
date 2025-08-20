@@ -4,7 +4,7 @@ import ContactsBlock from "@/components/blocks/ContactsBlock";
     return { title: `Контакты официального дилера Ростелеком` };
   }
 
-export default function ContactsPage() {
+export default function ContactsPage({cityName}:any) {
   
-  return <ContactsBlock/>
+  return <ContactsBlock cityName={cityName}/>
 } 

@@ -21,10 +21,11 @@ export async function generateMetadata({ params }: { params: { city: string } })
 export default async function CityCheckPage({ params }: { params: { city: string } }) {
   const data = await getCityData(params.city.toLowerCase());
   if (!data) return notFound();
+ console.log('имя города',params.city)
   return (
     <>
       <SetCityEffect city={data.meta.name} />
-      <CheckPage />
+      <CheckPage cityName={params.city}/>
     </>
   );
 }

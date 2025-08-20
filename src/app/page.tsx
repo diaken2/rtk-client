@@ -1063,6 +1063,7 @@ export default function HomePage() {
   const [filters, setFilters] = useState(defaultFilters);
   const { isSupportOnly } = useSupportOnly();
   const [city, setCity] = useState("в России");
+  const [citySlug, setCitySlug]=useState('')
 
 const router = useRouter();
   useEffect(() => {
@@ -1070,6 +1071,24 @@ const router = useRouter();
   }, []);
 
 
+
+useEffect(()=>{
+const slug = city
+              .toLowerCase()
+              .replace(/^(г\.|пгт|село|аул|деревня|поселок|ст-ца|п\.)\s*/i, "")
+              .replace(/ё/g, "e")
+              .replace(/\s+/g, "-")
+              .replace(/[а-я]/g, (c: string) => {
+                const map: Record<string, string> = {
+                  а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ж: "zh", з: "z", и: "i", й: "i",
+                  к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f",
+                  х: "h", ц: "c", ч: "ch", ш: "sh", щ: "sch", ы: "y", э: "e", ю: "yu", я: "ya"
+                };
+                return map[c] || "";
+              })
+              .replace(/[^a-z0-9-]/g, "");
+              setCitySlug(slug)
+},[city])
 
  useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -1532,7 +1551,7 @@ const router = useRouter();
       <SupportOnlyBlock isQuestionsBlock={true}>
         <QuestionsBlock />
       </SupportOnlyBlock>
-      <Footer cityName={city} />
+      <Footer cityName={citySlug} />
       
       
       {/* Модальные окна */}

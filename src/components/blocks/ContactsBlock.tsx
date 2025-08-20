@@ -20,7 +20,7 @@ const supportOptions = [
   "Не работает интернет/ТВ"
 ];
 
-export default function ContactsBlock() {
+export default function ContactsBlock({cityName}:any) {
   const router = useRouter();
 
   const handleFooterCategoryClick = (category: string) => {
@@ -274,7 +274,7 @@ export default function ContactsBlock() {
       {/* Блок "Остались вопросы?" */}
       <QuestionsBlock />
       
-      <Footer cityName="в России" />
+      <Footer cityName={cityName} />
     </>
   );
 } 

@@ -182,7 +182,7 @@ export default function TariffCard({ tariff, onClick }: TariffCardProps) {
               Подключить
             </button>
             <div className="mt-2 text-xs text-gray-500">
-              Подключение — 0 ₽
+              Подключение — {tariff.connectionPrice !== undefined ? `${tariff.connectionPrice} ₽` : '0 ₽'}
             </div>
           </>
         )}

@@ -9,10 +9,10 @@ import { useSupportOnly } from "@/context/SupportOnlyContext";
 
 const city = "в России";
 
-function CheckPageContent() {
+function CheckPageContent({cityName}:any) {
   const [isCallRequestModalOpen, setIsCallRequestModalOpen] = useState(false);
   const { isSupportOnly } = useSupportOnly();
-
+console.log(cityName)
   const handleCallRequest = () => {
     setIsCallRequestModalOpen(true);
   };
@@ -24,7 +24,7 @@ function CheckPageContent() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <HeroAddressSearch />
-      <Footer cityName={city} />
+      <Footer cityName={cityName} />
       <CallRequestModal
         isOpen={isCallRequestModalOpen}
         onClose={() => setIsCallRequestModalOpen(false)}
@@ -33,10 +33,11 @@ function CheckPageContent() {
   );
 }
 
-export default function CheckPage() {
+export default function CheckPage({cityName}:any) {
+  console.log(cityName)
   return (
     <Suspense fallback={<div>Загрузка...</div>}>
-      <CheckPageContent />
+      <CheckPageContent cityName={cityName}/>
     </Suspense>
   );
 } 

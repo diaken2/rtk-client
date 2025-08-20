@@ -25,6 +25,7 @@ interface Tariff {
   discountPrice?: number
   discountPeriod?: string
   discountPercentage?: number
+  connectionPrice?: number 
   tvChannels?: number
   mobileData?: number
   mobileMinutes?: number
@@ -34,7 +35,6 @@ interface Tariff {
   hidden?: boolean
   [key: string]: any
 }
-
 interface Service {
   id: string
   title: string
@@ -84,6 +84,7 @@ const excelHeaders: ExcelHeader[] = [
   { key: 'discountPrice', label: 'Цена со скидкой' },
   { key: 'discountPeriod', label: 'Период скидки' },
   { key: 'discountPercentage', label: 'Процент скидки' },
+  { key: 'connectionPrice', label: 'Цена подключения' }, // ← ДОБАВЛЯЕМ
   { key: 'tvChannels', label: 'Количество ТВ каналов' },
   { key: 'mobileData', label: 'Мобильные данные' },
   { key: 'mobileMinutes', label: 'Мобильные минуты' },
@@ -361,24 +362,24 @@ export default function AdminPanel() {
   
   setLoadingStates(prev => ({...prev, updating: true}))
   try {
-    const newTariff: Tariff = {
-      id: Math.floor(Math.random() * 1000000),
-      name: 'Новый тариф',
-      type: 'Интернет',
-      price: 500,
-      speed: 100,
-      technology: '',
-      discountPrice: 0,
-      discountPeriod: '',
-      discountPercentage: 0,
-      buttonColor: 'orange',
-      isHit: false,
-      features: [],
-      tvChannels: 0,
-      mobileData: 0,
-      mobileMinutes: 0
-    }
-    
+   const newTariff: Tariff = {
+  id: Math.floor(Math.random() * 1000000),
+  name: 'Новый тариф',
+  type: 'Интернет',
+  price: 500,
+  speed: 100,
+  technology: '',
+  discountPrice: 0,
+  discountPeriod: '',
+  discountPercentage: 0,
+  connectionPrice: 0, 
+  buttonColor: 'orange',
+  isHit: false,
+  features: [],
+  tvChannels: 0,
+  mobileData: 0,
+  mobileMinutes: 0
+}
     await axios.post(
       `https://rtk-backend-4m0e.onrender.com/api/tariffs/${selectedCity}/${selectedService}`,
       newTariff
@@ -870,28 +871,28 @@ export default function AdminPanel() {
                       const features = row['Особенности (через ;)']
                         ? row['Особенности (через ;)'].split(';').map((f: string) => f.trim()).filter((f: string) => f)
                         : []
-
-                      const tariff = {
-                        id: Math.floor(Math.random() * 100000),
-                        name: row['Название тарифа'] || '',
-                        type: row['Тип'] || '',
-                        speed: parseInt(row['Скорость']) || 0,
-                        technology: row['Технология'] || '',
-                        price: parseInt(row['Цена']) || 0,
-                        discountPrice: parseInt(row['Цена со скидкой']) || 0,
-                        discountPeriod: row['Период скидки'] || '',
-                        discountPercentage: Math.round(
-                          typeof row['Процент скидки'] === 'string'
-                            ? parseFloat(row['Процент скидки'].replace('%', '').trim())
-                            : (parseFloat(row['Процент скидки']) * 100)
-                        ) || 0,
-                        tvChannels: parseInt(row['Количество ТВ каналов']) || undefined,
-                        mobileData: parseInt(row['Мобильные данные']) || undefined,
-                        mobileMinutes: parseInt(row['Мобильные минуты']) || undefined,
-                        buttonColor: (row['Цвет кнопки'] || '').toLowerCase() || 'orange',
-                        isHit: row['Признак хита']?.toLowerCase() === 'да',
-                        features
-                      }
+const tariff = {
+  id: Math.floor(Math.random() * 100000),
+  name: row['Название тарифа'] || '',
+  type: row['Тип'] || '',
+  speed: parseInt(row['Скорость']) || 0,
+  technology: row['Технология'] || '',
+  price: parseInt(row['Цена']) || 0,
+  discountPrice: parseInt(row['Цена со скидкой']) || 0,
+  discountPeriod: row['Период скидки'] || '',
+  discountPercentage: Math.round(
+    typeof row['Процент скидки'] === 'string'
+      ? parseFloat(row['Процент скидки'].replace('%', '').trim())
+      : (parseFloat(row['Процент скидки']) * 100)
+  ) || 0,
+  connectionPrice: parseInt(row['Цена подключения']) || 0, // ← ДОБАВЛЯЕМ
+  tvChannels: parseInt(row['Количество ТВ каналов']) || undefined,
+  mobileData: parseInt(row['Мобильные данные']) || undefined,
+  mobileMinutes: parseInt(row['Мобильные минуты']) || undefined,
+  buttonColor: (row['Цвет кнопки'] || '').toLowerCase() || 'orange',
+  isHit: row['Признак хита']?.toLowerCase() === 'да',
+  features
+}
 
                       grouped[city].services[category].tariffs.push(tariff)
                     }

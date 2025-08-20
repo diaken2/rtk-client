@@ -22,7 +22,7 @@ export default async function CityContactsPage({ params }: { params: { city: str
   return (
     <>
       <SetCityEffect city={data.meta.name} />
-      <ContactsPage />
+      <ContactsPage cityName={params.city} />
     </>
   );
 }

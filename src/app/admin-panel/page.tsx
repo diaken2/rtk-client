@@ -455,28 +455,25 @@ const handleExcelImport = async (file: File) => {
           ? row['Особенности (через ;)'].split(';').map((f: string) => f.trim()).filter((f: string) => f)
           : []
 
-        const tariff = {
-          id: Math.floor(Math.random() * 100000),
-          name: row['Название тарифа'] || '',
-          type: row['Тип'] || '',
-          speed: parseInt(row['Скорость']) || 0,
-          technology: row['Технология'] || '',
-          price: parseInt(row['Цена']) || 0,
-          discountPrice: parseInt(row['Цена со скидкой']) || undefined,
-          discountPeriod: row['Период скидки'] || '',
-          discountPercentage: Math.round(
-            typeof row['Процент скидки'] === 'string'
-              ? parseFloat(row['Процент скидки'].replace('%', '').trim())
-              : (parseFloat(row['Процент скидки']) * 100)
-          ) || undefined,
-          connectionPrice: parseInt(row['Цена подключения']) || 0,
-          tvChannels: parseInt(row['Количество ТВ каналов']) || undefined,
-          mobileData: parseInt(row['Мобильные данные']) || undefined,
-          mobileMinutes: parseInt(row['Мобильные минуты']) || undefined,
-          buttonColor: (row['Цвет кнопки'] || '').toLowerCase() || 'orange',
-          isHit: row['Признак хита']?.toLowerCase() === 'да',
-          features
-        }
+   const tariff = {
+  id: Math.floor(Math.random() * 100000),
+  name: row['Название тарифа'] || '',
+  type: row['Тип'] || '',
+  speed: parseInt(row['Скорость']) || 0,
+  technology: row['Технология'] || '',
+  price: parseInt(row['Цена']) || 0,
+  // Обработка скидки:
+  discountPrice: (row['Процент скидки'] === '100%') ? 0 : parseInt(row['Цена со скидкой']) || undefined,
+  discountPeriod: row['Период скидки'] || '',
+  discountPercentage: parseOptionalPercent(row['Процент скидки']) || undefined,
+  connectionPrice: parseInt(row['Цена подключения']) || 0,
+  tvChannels: parseInt(row['Количество ТВ каналов']) || undefined,
+  mobileData: parseInt(row['Мобильные данные']) || undefined,
+  mobileMinutes: parseInt(row['Мобильные минуты']) || undefined,
+  buttonColor: (row['Цвет кнопки'] || '').toLowerCase() || 'orange',
+  isHit: row['Признак хита']?.toLowerCase() === 'да',
+  features
+};
 
         grouped[city].services[category].tariffs.push(tariff)
       }
@@ -531,7 +528,7 @@ const handleExcelImport = async (file: File) => {
             }
             
             try {
-              await axios.post('http://localhost:8888/api/upload-tariffs', chunkData, {
+              await axios.post('https://rtk-backend-4m0e.onrender.com/api/upload-tariffs', chunkData, {
                 signal: abortControllerRef.current?.signal,
                 timeout: 30000
               })

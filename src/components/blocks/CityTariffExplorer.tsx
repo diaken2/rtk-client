@@ -50,11 +50,14 @@ const defaultFilters: Filters = {
   gameBonuses: false,
   promotions: false,
   hitsOnly: false,
-  priceRange: [300, 1700],
-  speedRange: [50, 1000],
+  priceRange: [100, 5000],
+  speedRange: [0, 2000],
 };
 type FilterKey = keyof Filters;
-
+interface TimeSlot {
+  value: string;
+  label: string;
+}
 const houseTypes = ["Квартира", "Частный дом", "Офис"];
 const supportOptions = [
   "Оплата услуг",
@@ -67,11 +70,118 @@ function TariffHelpForm() {
   const [phone, setPhone] = React.useState("");
   const [name, setName] = React.useState("");
   const [supportValue, setSupportValue] = React.useState<string | null>(null);
-  const isFormValid = phone.replace(/\D/g, "").length === 10 && name.trim().length > 1;
+  const [selectedTime, setSelectedTime] = React.useState("");
+  const [timeSlots, setTimeSlots] = React.useState<TimeSlot[]>([]);
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const router = useRouter();
   const { setSupportOnly } = useSupportOnly();
+  const timeDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Генерация временных слотов на основе текущего времени
+  React.useEffect(() => {
+    if (step === 'connection') {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const slots: TimeSlot[] = [];
+
+      // Определяем рабочее время (6:00-21:00)
+      const isWorkingHours = currentHour >= 6 && currentHour < 21;
+
+      // Вне рабочего времени (21:00-6:00)
+      if (!isWorkingHours) {
+        slots.push({
+          value: 'out-of-hours',
+          label: 'Перезвоним в рабочее время'
+        });
+        
+        // Добавляем утренние слоты на завтра
+        for (let hour = 6; hour <= 11; hour++) {
+          slots.push({
+            value: `tomorrow-${hour}`,
+            label: `завтра с ${hour.toString().padStart(2, '0')}:00 до ${(hour + 1).toString().padStart(2, '0')}:00`
+          });
+        }
+        
+        setTimeSlots(slots);
+        setSelectedTime('out-of-hours');
+        return;
+      }
+
+      // Рабочее время (6:00-21:00)
+      // 1. ASAP вариант
+      slots.push({
+        value: 'asap',
+        label: 'Перезвоним в течение 15 минут'
+      });
+
+      // 2. Слоты на сегодня (каждые 15 минут до конца рабочего дня)
+      let slotHour = currentHour;
+      let slotMinute = Math.ceil(currentMinute / 15) * 15;
+      
+      if (slotMinute === 60) {
+        slotHour += 1;
+        slotMinute = 0;
+      }
+      
+      while (slotHour < 21 && slots.length < 8) {
+        let endMinute = slotMinute + 15;
+        let endHour = slotHour;
+        
+        if (endMinute >= 60) {
+          endHour += 1;
+          endMinute = endMinute - 60;
+        }
+        
+        // Пропускаем слоты, которые заканчиваются после 21:00
+        if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
+          break;
+        }
+        
+        slots.push({
+          value: `today-${slotHour}-${slotMinute}`,
+          label: `сегодня ${slotHour.toString().padStart(2, '0')}:${slotMinute.toString().padStart(2, '0')}–${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`
+        });
+        
+        // Переходим к следующему слоту
+        slotMinute += 15;
+        if (slotMinute >= 60) {
+          slotHour += 1;
+          slotMinute = 0;
+        }
+      }
+
+      // 3. Слоты на завтра (если не набрали 8 пунктов)
+      if (slots.length < 8) {
+        for (let hour = 6; hour <= 11; hour++) {
+          if (slots.length >= 8) break;
+          slots.push({
+            value: `tomorrow-${hour}`,
+            label: `завтра ${hour.toString().padStart(2, '0')}:00–${(hour + 1).toString().padStart(2, '0')}:00`
+          });
+        }
+      }
+
+      setTimeSlots(slots);
+      setSelectedTime('asap');
+    }
+  }, [step]);
+
+  // Закрытие дропдауна при клике вне его
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (timeDropdownRef.current && !timeDropdownRef.current.contains(event.target as Node)) {
+        setIsTimeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isFormValid = phone.replace(/\D/g, "").length === 10 && name.trim().length > 1 && selectedTime;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,12 +189,14 @@ function TariffHelpForm() {
     setSubmitted(true);
 
     try {
+      const selectedSlot = timeSlots.find(slot => slot.value === selectedTime);
       const result = await submitLead({
         type: step === 'connection' ? 'Новое подключение' : 'Поддержка существующего абонента',
         name: name,
         phone: phone,
         houseType: houseType,
         supportValue: supportValue || undefined,
+        callTime: selectedSlot?.label || selectedTime,
       });
 
       if (result.success) {
@@ -96,7 +208,6 @@ function TariffHelpForm() {
         }, 2000);
       } else {
         console.error('Failed to submit lead:', result.error);
-        // В случае ошибки все равно показываем успех пользователю
         setTimeout(() => {
           setSubmitted(false);
           setPhone(""); 
@@ -106,7 +217,6 @@ function TariffHelpForm() {
       }
     } catch (error) {
       console.error('Error submitting lead:', error);
-      // В случае ошибки все равно показываем успех пользователю
       setTimeout(() => {
         setSubmitted(false);
         setPhone(""); 
@@ -127,9 +237,20 @@ function TariffHelpForm() {
 
   if (!step) {
     return (
-      <div className="flex flex-col sm:flex-row justify-center gap-4">
-        <button className="bg-[#ff4d06] text-white font-bold rounded-full px-10 py-4 text-lg transition hover:bg-[#ff7f2a]" onClick={() => setStep('connection')}>Новое подключение</button>
-        <button className="bg-transparent border-2 border-white text-white font-bold rounded-full px-10 py-4 text-lg transition hover:bg-white hover:text-[#8000ff]" onClick={() => setStep('support')}>Я существующий абонент</button>
+      <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
+        <button 
+          className="bg-[#ff4d06] text-white font-bold rounded-full px-3 sm:px-6 md:px-10 py-2 sm:py-3 text-[11px] sm:text-sm md:text-lg transition hover:bg-[#ff7f2a] whitespace-nowrap min-h-[44px] flex items-center justify-center"
+          onClick={() => setStep('connection')}
+        >
+          Новое подключение
+        </button>
+        <button 
+          className="bg-transparent border-2 border-white text-white font-bold rounded-full px-3 sm:px-4 md:px-10 py-2 sm:py-3 text-[11px] sm:text-sm md:text-lg transition hover:bg-white hover:text-[#8000ff] whitespace-nowrap min-h-[44px] flex items-center justify-center"
+          onClick={() => setStep('support')}
+        >
+          <span className="hidden sm:inline">Я действующий абонент</span>
+          <span className="sm:hidden">Я абонент</span>
+        </button>
       </div>
     );
   }
@@ -191,10 +312,44 @@ function TariffHelpForm() {
               {submitted ? 'Отправлено!' : isSubmitting ? 'Отправляем...' : 'Жду звонка'}
             </button>
           </div>
-          {/* Подпись под полем */}
-          <div className="flex items-center gap-2 mt-3 justify-start">
-            <span className="text-white text-[13px] font-normal font-sans">Перезвоним в течение 15 минут</span>
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {/* Подпись под полем с выпадающим списком */}
+          <div className="flex items-center gap-2 mt-3 justify-start relative" ref={timeDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+              className="text-white text-[13px] font-normal font-sans hover:underline flex items-center gap-1"
+            >
+              {timeSlots.find(slot => slot.value === selectedTime)?.label || 'Перезвоним в течение 15 минут'}
+              <svg 
+                className={`w-4 h-4 transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 10l5 5 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            {isTimeDropdownOpen && (
+              <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg py-2 z-20 min-w-[250px] max-h-[200px] overflow-y-auto">
+                {timeSlots.map((slot) => (
+                  <button
+                    key={slot.value}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTime(slot.value);
+                      setIsTimeDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+                      selectedTime === slot.value 
+                        ? 'bg-[#FFF4F0] text-[#FF4D15] font-semibold' 
+                        : 'text-[#0F191E] hover:bg-gray-100'
+                    }`}
+                  >
+                    {slot.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           {/* Юридическая строка */}
           <p className="text-[12px] font-light font-sans mt-2 text-left text-[#D8B5FF]">Отправляя заявку, вы соглашаетесь с <a href="#" className="underline">политикой обработки персональных данных</a></p>
@@ -249,7 +404,39 @@ export default function CityTariffExplorer({
   const { isSupportOnly } = useSupportOnly();
   const searchParams = useSearchParams();
   const router = useRouter();
+    const [priceLimits, setPriceLimits] = useState({ min: 100, max: 5000 });
+    const [speedLimits, setSpeedLimits] = useState({ min: 0, max: 1000 });
+     const visibleTariffs = useMemo(() => {
+    return tariffs.filter(tariff => !tariff.hidden);
+  }, [tariffs]);
+useEffect(() => {
+  if (visibleTariffs.length > 0) {
+    const prices = visibleTariffs.map(t => t.price).filter(price => price > 0);
+    const speeds = visibleTariffs.map(t => t.speed || 0).filter(speed => speed > 0);
+    
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const minSpeed = speeds.length > 0 ? Math.min(...speeds) : 0;
+    const maxSpeed = speeds.length > 0 ? Math.max(...speeds) : 1000;
+    
+    setPriceLimits({
+      min: Math.max(100, Math.floor(minPrice / 100) * 100),
+      max: Math.min(10000, Math.ceil(maxPrice / 100) * 100)
+    });
 
+    setSpeedLimits({
+      min: 0, // Минимальная скорость всегда 0
+      max: Math.max(1000, Math.ceil(maxSpeed / 100) * 100)
+    });
+
+    // Устанавливаем фильтры по умолчанию
+    setFilters(prev => ({
+      ...prev,
+      priceRange: [minPrice, maxPrice],
+      speedRange: [0, maxSpeed] // Начинаем с 0 чтобы включить все тарифы
+    }));
+  }
+}, [visibleTariffs]);
   const categoryMapping = useMemo((): Record<string, string> => ({
     internet: "Интернет",
     "internet-tv": "Интернет + ТВ",
@@ -266,17 +453,21 @@ str
 .replace('моб', 'mobile');
 
 const getTariffTypeKey = (type: string): string => {
-const hasInternet = /интернет/i.test(type);
-const hasTV = /тв/i.test(type);
-const hasMobile = /моб/i.test(type);
-
-if (hasInternet && hasTV && hasMobile) return 'internet-tv-mobile';
-if (hasInternet && hasTV) return 'internet-tv';
-if (hasInternet && hasMobile) return 'internet-mobile';
-if (hasInternet) return 'internet';
-
-return 'other';
-};
+    if (!type) return 'other';
+    
+    const normalizedType = type.toLowerCase().replace(/\s+/g, '');
+    
+    if (normalizedType.includes('интернет') && normalizedType.includes('тв') && normalizedType.includes('моб')) 
+      return 'internet-tv-mobile';
+    if (normalizedType.includes('интернет') && normalizedType.includes('тв')) 
+      return 'internet-tv';
+    if (normalizedType.includes('интернет') && normalizedType.includes('моб')) 
+      return 'internet-mobile';
+    if (normalizedType.includes('интернет')) 
+      return 'internet';
+    
+    return 'other';
+  };
 const isAllCategoryActive =
 !filters.internet && !filters.tv && !filters.mobile;
   useEffect(() => {
@@ -292,62 +483,65 @@ const isAllCategoryActive =
 
 
 
-const filteredTariffs = tariffs.filter((tariff) => {
-const isDefaultPrice = filters.priceRange[0] === 300 && filters.priceRange[1] === 1700;
-const isDefaultSpeed = filters.speedRange[0] === 50 && filters.speedRange[1] === 1000;
-const hasActiveFilters =
-filters.internet ||
-filters.tv ||
-filters.mobile ||
-filters.onlineCinema ||
-filters.gameBonuses;
+const filteredTariffs = useMemo(() => {
+    return visibleTariffs.filter((tariff) => {
+      // 1. Фильтр по категории (вкладки)
+      if (activeCategory !== 'all') {
+        const tariffCategory = getTariffTypeKey(tariff.type);
+        if (tariffCategory !== activeCategory) return false;
+      }
 
-const featureText = `${tariff.name ?? ''} ${(tariff.features || []).join(' ')}`.toLowerCase();
+      // 2. Фильтр по боковым чекбоксам (только когда активна категория 'all')
+      if (activeCategory === 'all') {
+        const hasInternet = filters.internet && /интернет/i.test(tariff.type);
+        const hasTV = filters.tv && /тв/i.test(tariff.type);
+        const hasMobile = filters.mobile && /моб/i.test(tariff.type);
+        
+        // Если какие-то боковые фильтры активны, применяем их
+        if (filters.internet || filters.tv || filters.mobile) {
+          if (!(hasInternet || hasTV || hasMobile)) return false;
+        }
+      }
 
-// Жёсткое сравнение типа тарифа
-let categoryMatch = true;
-if (activeCategory !== 'all') {
-const tariffKey =  getTariffTypeKey (tariff.type);
-categoryMatch = tariffKey === activeCategory;
-}
-
-  // Боковые фильтры (только при активной категории 'all')
-  let sidebarMatch = true;
-  if (activeCategory === 'all' && hasActiveFilters) {
-    sidebarMatch =
-      (filters.internet && tariff.type.includes('Интернет')) ||
-      (filters.tv && tariff.type.includes('ТВ')) ||
-      (filters.mobile && tariff.type.includes('Моб')) ||
-      (filters.onlineCinema && (
+      // 3. Фильтр по особенностям
+      const featureText = `${tariff.name ?? ''} ${(tariff.features || []).join(' ')}`.toLowerCase();
+      
+      if (filters.onlineCinema && !(
         featureText.includes('wink') ||
         featureText.includes('фильм') ||
         featureText.includes('сериал') ||
         featureText.includes('кино')
-      )) ||
-      (filters.gameBonuses && (
-        featureText.includes('игров') ||
+      )) return false;
+
+      if (filters.gameBonuses && !(
+        featureText.includes('игр') ||
         featureText.includes('бонус')
-      ));
-  }
+      )) return false;
 
-  // Спецпредложения
-  const promoMatch =
-    !filters.promotions ||
-    tariff.discountPrice !== undefined ||
-    tariff.discountPercentage !== undefined ||
-    tariff.name?.toLowerCase().includes('тест-драйв');
+      // 4. Фильтр по акциям
+      if (filters.promotions && !(
+        tariff.discountPrice !== undefined ||
+        tariff.discountPercentage !== undefined ||
+        tariff.name?.toLowerCase().includes('тест-драйв') ||
+        tariff.name?.toLowerCase().includes('акция')
+      )) return false;
 
-  // Хиты
-  const hitsMatch = !filters.hitsOnly || tariff.isHit;
+      // 5. Фильтр по хитам
+      if (filters.hitsOnly && !tariff.isHit) return false;
 
-  // Цена
-  const priceMatch = tariff.price >= filters.priceRange[0] && tariff.price <= filters.priceRange[1];
+      // 6. Фильтр по цене
+      if (tariff.price < filters.priceRange[0] || tariff.price > filters.priceRange[1]) 
+        return false;
 
-  // Скорость
-  const speedMatch = !tariff.speed || (tariff.speed >= filters.speedRange[0] && tariff.speed <= filters.speedRange[1]);
+      // 7. Фильтр по скорости (только для тарифов с интернетом)
+       if (tariff.speed > 0) {
+      if (tariff.speed < filters.speedRange[0] || tariff.speed > filters.speedRange[1]) 
+        return false;
+    }
 
-  return categoryMatch && sidebarMatch && promoMatch && hitsMatch && priceMatch && speedMatch;
-});
+      return true;
+    });
+  }, [visibleTariffs, activeCategory, filters]);
 
   // сортировка
   const sortedTariffs = (() => {
@@ -364,35 +558,31 @@ categoryMatch = tariffKey === activeCategory;
   })();
 
   const handleFilterChange = (newFilters: Partial<Filters>) => {
-  setFilters(prev => {
-    const updated = { ...prev, ...newFilters };
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
 
-    const { internet, tv, mobile } = updated;
-
-    let nextCategory = 'all';
-
-    if (internet && tv && mobile) {
-      nextCategory = 'internet-tv-mobile';
-    } else if (internet && tv) {
-      nextCategory = 'internet-tv';
-    } else if (internet && mobile) {
-      nextCategory = 'internet-mobile';
-    } else if (internet && !tv && !mobile) {
-      nextCategory = 'internet';
+    // Автоматически определяем категорию на основе фильтров
+    if (updatedFilters.internet || updatedFilters.tv || updatedFilters.mobile) {
+      if (updatedFilters.internet && updatedFilters.tv && updatedFilters.mobile) {
+        setActiveCategory('internet-tv-mobile');
+      } else if (updatedFilters.internet && updatedFilters.tv) {
+        setActiveCategory('internet-tv');
+      } else if (updatedFilters.internet && updatedFilters.mobile) {
+        setActiveCategory('internet-mobile');
+      } else if (updatedFilters.internet) {
+        setActiveCategory('internet');
+      }
+    } else {
+      setActiveCategory('all');
     }
-
-    // если только моб или только тв — оставляем "все"
-    if (
-      (!internet && tv && !mobile) ||
-      (!internet && !tv && mobile)
-    ) {
-      nextCategory = 'all';
-    }
-
-    setActiveCategory(nextCategory);
-    return updated;
-  });
-};
+  };
+   useEffect(() => {
+    console.log('Total tariffs:', tariffs.length);
+    console.log('Visible tariffs:', visibleTariffs.length);
+    console.log('Filtered tariffs:', filteredTariffs.length);
+    console.log('Active category:', activeCategory);
+    console.log('Filters:', filters);
+  }, [tariffs, visibleTariffs, filteredTariffs, activeCategory, filters]);
 function isSameCombination(filters: Filters, combo: Partial<Filters>) {
   return (
     filters.internet === !!combo.internet &&
@@ -405,24 +595,19 @@ const isAllCategory =
   (!filters.internet &&
     (filters.tv || filters.mobile || (!filters.tv && !filters.mobile)));
 
-  const handleCategoryChange = (categoryId: string) => {
-  setActiveCategory(categoryId);
-
-  if (categoryId === 'all') {
-    setFilters(prev => ({
-      ...prev,
-      internet: false,
-      tv: false,
-      mobile: false,
-    }));
-  } else {
-    const serviceFilters = getServiceFiltersForCategory(categoryId);
-    setFilters(prev => ({
-      ...prev,
-      ...serviceFilters,
-    }));
-  }
-};
+ const handleCategoryChange = (categoryId: string) => {
+    setActiveCategory(categoryId);
+    
+    // Сбрасываем только интернет/ТВ/мобильные фильтры при смене категории
+    if (categoryId === 'all') {
+      setFilters(prev => ({
+        ...prev,
+        internet: false,
+        tv: false,
+        mobile: false
+      }));
+    }
+  };
 
   const resetFilters = () => {
     setActiveCategory("all");
@@ -484,85 +669,70 @@ const isAllCategory =
             </div>
 
             {/* цена */}
-           <div className="mb-6">
-              <h4 className="font-semibold mb-3">Стоимость в месяц (₽)</h4>
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>{filters.priceRange[0]}</span>
-                <span>{filters.priceRange[1]}</span>
-              </div>
-              <Slider
-                range
-                min={300}
-                max={1700}
-                value={filters.priceRange}
-                onChange={(value) => Array.isArray(value) && handleFilterChange({ priceRange: value })}
-                trackStyle={[{ backgroundColor: '#FF6600' }]}
-                handleStyle={[{ borderColor: '#FF6600', backgroundColor: '#FF6600' }, { borderColor: '#FF6600', backgroundColor: '#FF6600' }]}
-                railStyle={{ backgroundColor: '#eee' }}
-              />
+    <div className="mb-6">
+            <h4 className="font-semibold mb-3">Стоимость в месяц (₽)</h4>
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>{filters.priceRange[0]}</span>
+              <span>{filters.priceRange[1]}</span>
             </div>
+            <Slider
+              range
+              min={priceLimits.min}
+              max={priceLimits.max}
+              value={filters.priceRange}
+              onChange={(value) => Array.isArray(value) && handleFilterChange({ priceRange: value })}
+              trackStyle={[{ backgroundColor: '#FF6600' }]}
+              handleStyle={[{ borderColor: '#FF6600', backgroundColor: '#FF6600' }, { borderColor: '#FF6600', backgroundColor: '#FF6600' }]}
+              railStyle={{ backgroundColor: '#eee' }}
+            />
+          </div>
 
             {/* скорость */}
-           <div className="mb-6">
-              <h4 className="font-semibold mb-3">Скорость (Мбит/с)</h4>
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>{filters.speedRange[0]}</span>
-                <span>{filters.speedRange[1]}</span>
-              </div>
-              <Slider
-                range
-                min={50}
-                max={1000}
-                value={filters.speedRange}
-                onChange={(value) => Array.isArray(value) && handleFilterChange({ speedRange: value })}
-                trackStyle={[{ backgroundColor: '#FF6600' }]}
-                handleStyle={[{ borderColor: '#FF6600', backgroundColor: '#FF6600' }, { borderColor: '#FF6600', backgroundColor: '#FF6600' }]}
-                railStyle={{ backgroundColor: '#eee' }}
-              />
-            </div>
+      <div className="mb-6">
+  <h4 className="font-semibold mb-3">Скорость (Мбит/с)</h4>
+  <div className="flex justify-between text-sm text-gray-600 mb-2">
+    <span>{filters.speedRange[0]}</span>
+    <span>{filters.speedRange[1]}</span>
+  </div>
+  <Slider
+    range
+    min={speedLimits.min}
+    max={speedLimits.max}
+    value={filters.speedRange}
+    onChange={(value) => Array.isArray(value) && handleFilterChange({ speedRange: value })}
+    trackStyle={[{ backgroundColor: '#FF6600' }]}
+    handleStyle={[{ borderColor: '#FF6600', backgroundColor: '#FF6600' }, { borderColor: '#FF6600', backgroundColor: '#FF6600' }]}
+    railStyle={{ backgroundColor: '#eee' }}
+  />
+</div>
           </div>
         </aside>
 
         <div className="w-full lg:w-3/4">
           <div className="mb-6 -mx-4 lg:mx-0">
-            <div className="flex gap-3 items-center px-4 overflow-x-auto scroll-smooth whitespace-nowrap lg:flex-wrap lg:overflow-visible lg:whitespace-normal">
-    <button
-  key="all"
-  onClick={() => handleCategoryChange("all")}
-  className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-    isAllCategory ? "bg-rt-cta text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-  }`}
->
-  Все
-</button>
-          {Object.entries(categoryMapping).map(([id, label]) => {
-  const { internet, tv, mobile } = filters;
-
-  // Определяем ожидаемую комбинацию фильтров для этой категории
-  const expected = getServiceFiltersForCategory(id);
-
-  // Сравниваем активные фильтры с категорией
-  const isActiveCategory =
-    internet === expected.internet &&
-    tv === expected.tv &&
-    mobile === expected.mobile;
-
-  return (
-    <button
-      key={id}
-      onClick={() => handleCategoryChange(id)}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-        isActiveCategory
-          ? "bg-rt-cta text-white"
-          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-      }`}
-    >
-      {label}
-    </button>
-  );
-})}
-            </div>
-          </div>
+        <div className="flex gap-3 items-center px-4 overflow-x-auto">
+          <button
+            onClick={() => handleCategoryChange("all")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+              activeCategory === "all" ? "bg-rt-cta text-white" : "bg-gray-100 text-gray-700"
+            }`}
+          >
+            Все
+          </button>
+          
+          {Object.entries(categoryMapping).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => handleCategoryChange(id)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                activeCategory === id ? "bg-rt-cta text-white" : "bg-gray-100 text-gray-700"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
           
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

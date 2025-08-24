@@ -6,6 +6,11 @@ import Image from 'next/image';
 import { useSupportOnly } from '@/context/SupportOnlyContext';
 import Link from 'next/link';
 
+interface TimeSlot {
+  value: string;
+  label: string;
+}
+
 const categories = [
   { key: "connection", label: "Подключение" },
   { key: "support", label: "Поддержка" },
@@ -37,12 +42,118 @@ const QuestionsBlock: React.FC = () => {
   const [name, setName] = useState("");
   const [supportValue, setSupportValue] = useState<string | null>(null);
   const [otherValue, setOtherValue] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState("");
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { setSupportOnly, isSupportOnly } = useSupportOnly();
 
-  const isFormValid = phone.replace(/\D/g, "").length === 10 && name.trim().length > 1;
+  // Генерация временных слотов на основе текущего времени
+  useEffect(() => {
+    if (category === "connection" || (category === "other" && otherValue === otherOptions[1])) {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const slots: TimeSlot[] = [];
+
+      // Определяем рабочее время (6:00-21:00)
+      const isWorkingHours = currentHour >= 6 && currentHour < 21;
+
+      // Вне рабочего времени (21:00-6:00)
+      if (!isWorkingHours) {
+        slots.push({
+          value: 'out-of-hours',
+          label: 'Перезвоним в рабочее время'
+        });
+        
+        // Добавляем утренние слоты на завтра
+        for (let hour = 6; hour <= 11; hour++) {
+          slots.push({
+            value: `tomorrow-${hour}`,
+            label: `завтра с ${hour.toString().padStart(2, '0')}:00 до ${(hour + 1).toString().padStart(2, '0')}:00`
+          });
+        }
+        
+        setTimeSlots(slots);
+        setSelectedTime('out-of-hours');
+        return;
+      }
+
+      // Рабочее время (6:00-21:00)
+      // 1. ASAP вариант
+      slots.push({
+        value: 'asap',
+        label: 'Перезвоним в течение 15 минут'
+      });
+
+      // 2. Слоты на сегодня (каждые 15 минут до конца рабочего дня)
+      let slotHour = currentHour;
+      let slotMinute = Math.ceil(currentMinute / 15) * 15;
+      
+      if (slotMinute === 60) {
+        slotHour += 1;
+        slotMinute = 0;
+      }
+      
+      while (slotHour < 21 && slots.length < 8) {
+        let endMinute = slotMinute + 15;
+        let endHour = slotHour;
+        
+        if (endMinute >= 60) {
+          endHour += 1;
+          endMinute = endMinute - 60;
+        }
+        
+        // Пропускаем слоты, которые заканчиваются после 21:00
+        if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
+          break;
+        }
+        
+        slots.push({
+          value: `today-${slotHour}-${slotMinute}`,
+          label: `сегодня ${slotHour.toString().padStart(2, '0')}:${slotMinute.toString().padStart(2, '0')}–${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`
+        });
+        
+        // Переходим к следующему слоту
+        slotMinute += 15;
+        if (slotMinute >= 60) {
+          slotHour += 1;
+          slotMinute = 0;
+        }
+      }
+
+      // 3. Слоты на завтра (если не набрали 8 пунктов)
+      if (slots.length < 8) {
+        for (let hour = 6; hour <= 11; hour++) {
+          if (slots.length >= 8) break;
+          slots.push({
+            value: `tomorrow-${hour}`,
+            label: `завтра ${hour.toString().padStart(2, '0')}:00–${(hour + 1).toString().padStart(2, '0')}:00`
+          });
+        }
+      }
+
+      setTimeSlots(slots);
+      setSelectedTime('asap');
+    }
+  }, [category, otherValue]);
+
+  // Закрытие дропдауна при клике вне его
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const timeDropdown = document.querySelector('.time-dropdown');
+      if (timeDropdown && !timeDropdown.contains(event.target as Node)) {
+        setIsTimeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isFormValid = phone.replace(/\D/g, "").length === 10 && name.trim().length > 1 && selectedTime;
 
   const showSupportInfo =
     (category === "support" && supportValue) ||
@@ -56,6 +167,7 @@ const QuestionsBlock: React.FC = () => {
     setSubmitted(true);
 
     try {
+      const selectedSlot = timeSlots.find(slot => slot.value === selectedTime);
       const result = await submitLead({
         type: `Вопросы - ${category}`,
         name: name,
@@ -63,6 +175,7 @@ const QuestionsBlock: React.FC = () => {
         houseType: houseType,
         supportValue: supportValue || undefined,
         otherValue: otherValue || undefined,
+        callTime: selectedSlot?.label || selectedTime,
       });
 
       if (result.success) {
@@ -73,12 +186,11 @@ const QuestionsBlock: React.FC = () => {
           setCategory(null);
           setSupportValue(null);
           setOtherValue(null);
-          // Перенаправляем на страницу завершения
+          setSelectedTime("");
           router.push('/complete');
         }, 2000);
       } else {
         console.error('Failed to submit lead:', result.error);
-        // В случае ошибки все равно показываем успех пользователю
         setTimeout(() => {
           setSubmitted(false);
           setPhone("");
@@ -86,13 +198,12 @@ const QuestionsBlock: React.FC = () => {
           setCategory(null);
           setSupportValue(null);
           setOtherValue(null);
-          // Перенаправляем на страницу завершения
+          setSelectedTime("");
           router.push('/complete');
         }, 2000);
       }
     } catch (error) {
       console.error('Error submitting lead:', error);
-      // В случае ошибки все равно показываем успех пользователю
       setTimeout(() => {
         setSubmitted(false);
         setPhone("");
@@ -100,7 +211,7 @@ const QuestionsBlock: React.FC = () => {
         setCategory(null);
         setSupportValue(null);
         setOtherValue(null);
-        // Перенаправляем на страницу завершения
+        setSelectedTime("");
         router.push('/complete');
       }, 2000);
     } finally {
@@ -185,6 +296,7 @@ const QuestionsBlock: React.FC = () => {
                           setCategory(cat.key);
                           setSupportValue(null);
                           setOtherValue(null);
+                          setSelectedTime("");
                         }}
                       >
                         {cat.label}
@@ -325,9 +437,44 @@ const QuestionsBlock: React.FC = () => {
                           {submitted ? 'Отправлено!' : isSubmitting ? 'Отправляем...' : 'Жду звонка'}
                         </button>
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-gray-500 text-base">Перезвоним в течение 15 минут</span>
-                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" stroke="#bdbdbd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      {/* Выбор времени звонка */}
+                      <div className="flex items-center gap-2 mt-1 relative time-dropdown">
+                        <button
+                          type="button"
+                          onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                          className="text-gray-500 text-base hover:underline flex items-center gap-1"
+                        >
+                          {timeSlots.find(slot => slot.value === selectedTime)?.label || 'Перезвоним в течение 15 минут'}
+                          <svg 
+                            className={`w-4 h-4 transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
+                            fill="none" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M7 10l5 5 5-5" stroke="#bdbdbd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+
+                        {isTimeDropdownOpen && (
+                          <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg py-2 z-20 min-w-[250px] max-h-[200px] overflow-y-auto border border-gray-200">
+                            {timeSlots.map((slot) => (
+                              <button
+                                key={slot.value}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTime(slot.value);
+                                  setIsTimeDropdownOpen(false);
+                                }}
+                                className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+                                  selectedTime === slot.value 
+                                    ? 'bg-[#FFF4F0] text-[#FF4D15] font-semibold' 
+                                    : 'text-[#0F191E] hover:bg-gray-100'
+                                }`}
+                              >
+                                {slot.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <p className="text-xs text-gray-400 mt-2 text-right">
                         Отправляя заявку, вы соглашаетесь с <Link href="/privacy" className="underline text-[#2196f3]">политикой обработки данных</Link>
@@ -380,9 +527,44 @@ const QuestionsBlock: React.FC = () => {
                         Жду звонка
                       </button>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-gray-500 text-base">Перезвоним в течение 15 минут</span>
-                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" stroke="#bdbdbd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    {/* Выбор времени звонка */}
+                    <div className="flex items-center gap-2 mt-1 relative time-dropdown">
+                      <button
+                        type="button"
+                        onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+                        className="text-gray-500 text-base hover:underline flex items-center gap-1"
+                      >
+                        {timeSlots.find(slot => slot.value === selectedTime)?.label || 'Перезвоним в течение 15 минут'}
+                        <svg 
+                          className={`w-4 h-4 transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
+                          fill="none" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M7 10l5 5 5-5" stroke="#bdbdbd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+
+                      {isTimeDropdownOpen && (
+                        <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg py-2 z-20 min-w-[250px] max-h-[200px] overflow-y-auto border border-gray-200">
+                          {timeSlots.map((slot) => (
+                            <button
+                              key={slot.value}
+                              type="button"
+                              onClick={() => {
+                                setSelectedTime(slot.value);
+                                setIsTimeDropdownOpen(false);
+                              }}
+                              className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+                                selectedTime === slot.value 
+                                  ? 'bg-[#FFF4F0] text-[#FF4D15] font-semibold' 
+                                  : 'text-[#0F191E] hover:bg-gray-100'
+                              }`}
+                            >
+                              {slot.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <p className="text-xs text-gray-400 mt-2 text-right">
                       Отправляя заявку, вы соглашаетесь с <Link href="/privacy" className="underline text-[#2196f3]">политикой обработки данных</Link>
@@ -411,4 +593,4 @@ const QuestionsBlock: React.FC = () => {
   );
 };
 
-export default QuestionsBlock; 
+export default QuestionsBlock;

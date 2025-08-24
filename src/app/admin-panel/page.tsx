@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, ChangeEvent, FormEvent } from 'react'
+import { useEffect, useState, ChangeEvent, FormEvent, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import axios from 'axios'
 
@@ -72,6 +72,47 @@ const API_DELAY_ESTIMATE = {
   mass: 2000,
   import: 3000,
   login: 1000
+}
+
+
+// -------------------- УТИЛИТЫ ДЛЯ ПАРСИНГА --------------------
+const toStr = (v: any): string => {
+  if (v === undefined || v === null) return ''
+  return String(v).trim()
+}
+
+const parseOptionalNumber = (v: any): number | undefined => {
+  const s = toStr(v)
+  if (s === '') return undefined
+  // убираем пробелы, нецифры кроме точки и минуса, сохраняем %
+  const cleaned = s.replace(/\s+/g,'').replace(',', '.').replace(/[^\d.\-]/g, '')
+  if (cleaned === '') return undefined
+  const n = Number(cleaned)
+  return Number.isFinite(n) ? n : undefined
+}
+
+const parseOptionalInt = (v: any): number | undefined => {
+  const n = parseOptionalNumber(v)
+  if (n === undefined) return undefined
+  return Math.round(n)
+}
+
+const parseOptionalPercent = (v: any): number | undefined => {
+  const s = toStr(v)
+  if (s === '') return undefined
+  // если есть %, просто взять число
+  const withPercent = s.match(/(-?\d+(?:[.,]\d+)?)\s*%/)
+  if (withPercent) return Math.round(Number(withPercent[1].replace(',', '.')))
+  // иначе парсим число — если дробь <=1 считаем как долю
+  const n = parseOptionalNumber(s)
+  if (n === undefined) return undefined
+  if (n <= 1) return Math.round(n * 100)
+  return Math.round(n)
+}
+
+const IMPORT_CONFIG = {
+  chunkSize: 1000, // Количество тарифов в одном чанке
+  delayBetweenChunks: 1000, // Задержка между отправкой чанков (мс)
 }
 
 const excelHeaders: ExcelHeader[] = [
@@ -157,7 +198,29 @@ export default function AdminPanel() {
   const [selectedTariffs, setSelectedTariffs] = useState<Set<number>>(new Set())
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState<Partial<Tariff>>({})
+ const [importProgress, setImportProgress] = useState({
+    current: 0,
+    total: 0,
+    processedCities: 0,
+    totalCities: 0,
+    status: 'idle' as 'idle' | 'processing' | 'completed' | 'error'
+  })
+  const [importResults, setImportResults] = useState<{
+    success: number
+    failed: number
+    errors: string[]
+  }>({
+    success: 0,
+    failed: 0,
+    errors: []
+  })
+  
+  const abortControllerRef = useRef<AbortController | null>(null)
 
+
+
+
+  
   // Проверка авторизации при загрузке
   useEffect(() => {
     const savedAuth = localStorage.getItem('rtk_admin_auth')
@@ -328,7 +391,238 @@ export default function AdminPanel() {
       setLoadingStates(prev => ({...prev, massOperation: false}))
     }
   }
+const handleExcelImport = async (file: File) => {
+    if (!file) return
+    
+    // Сбрасываем состояние импорта
+    setImportProgress({
+      current: 0,
+      total: 0,
+      processedCities: 0,
+      totalCities: 0,
+      status: 'processing'
+    })
+    setImportResults({
+      success: 0,
+      failed: 0,
+      errors: []
+    })
+    
+    // Создаем AbortController для возможности прервать импорт
+    abortControllerRef.current = new AbortController()
+    
+    try {
+      const data = await file.arrayBuffer()
+      const workbook = XLSX.read(data)
+      const sheet = workbook.Sheets[workbook.SheetNames[0]]
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' }) as any[]
+      
+      // Группируем данные по городам и категориям
+      const grouped: Record<string, CityData> = {}
+      
+      for (const row of rows) {
+        const city = row['Город']?.trim() || 'неизвестно'
+        const region = row['Регион']?.trim() || ''
+        const category = (row['Категория'] || 'internet').trim()
 
+        if (!grouped[city]) {
+          grouped[city] = {
+            slug: city.toLowerCase().replace(/\s+/g, '-'),
+            meta: {
+              name: city,
+              region,
+              timezone: 'Europe/Moscow'
+            },
+            services: {}
+          }
+        }
+
+        if (!grouped[city].services[category]) {
+          grouped[city].services[category] = {
+            id: category,
+            title: category,
+            description: `Тарифы на ${category}`,
+            meta: {
+              description: `Тарифы на ${category}`,
+              keywords: [category],
+              ogImage: '/og/default.jpg'
+            },
+            tariffs: []
+          }
+        }
+
+        const features = row['Особенности (через ;)']
+          ? row['Особенности (через ;)'].split(';').map((f: string) => f.trim()).filter((f: string) => f)
+          : []
+
+        const tariff = {
+          id: Math.floor(Math.random() * 100000),
+          name: row['Название тарифа'] || '',
+          type: row['Тип'] || '',
+          speed: parseInt(row['Скорость']) || 0,
+          technology: row['Технология'] || '',
+          price: parseInt(row['Цена']) || 0,
+          discountPrice: parseInt(row['Цена со скидкой']) || undefined,
+          discountPeriod: row['Период скидки'] || '',
+          discountPercentage: Math.round(
+            typeof row['Процент скидки'] === 'string'
+              ? parseFloat(row['Процент скидки'].replace('%', '').trim())
+              : (parseFloat(row['Процент скидки']) * 100)
+          ) || undefined,
+          connectionPrice: parseInt(row['Цена подключения']) || 0,
+          tvChannels: parseInt(row['Количество ТВ каналов']) || undefined,
+          mobileData: parseInt(row['Мобильные данные']) || undefined,
+          mobileMinutes: parseInt(row['Мобильные минуты']) || undefined,
+          buttonColor: (row['Цвет кнопки'] || '').toLowerCase() || 'orange',
+          isHit: row['Признак хита']?.toLowerCase() === 'да',
+          features
+        }
+
+        grouped[city].services[category].tariffs.push(tariff)
+      }
+      
+      // Подсчитываем общее количество тарифов
+      let totalTariffs = 0
+      Object.values(grouped).forEach(city => {
+        Object.values(city.services).forEach(service => {
+          totalTariffs += service.tariffs.length
+        })
+      })
+      
+      setImportProgress(prev => ({
+        ...prev,
+        total: totalTariffs,
+        totalCities: Object.keys(grouped).length
+      }))
+      
+      // Отправляем данные чанками
+      const cityKeys = Object.keys(grouped)
+      let successCount = 0
+      let failedCount = 0
+      const errors: string[] = []
+      
+      for (let i = 0; i < cityKeys.length; i++) {
+        if (abortControllerRef.current?.signal.aborted) break
+        
+        const cityKey = cityKeys[i]
+        const cityData = grouped[cityKey]
+        
+        // Разбиваем тарифы города на чанки
+        const serviceKeys = Object.keys(cityData.services)
+        for (const serviceKey of serviceKeys) {
+          const service = cityData.services[serviceKey]
+          const tariffs = service.tariffs
+          
+          // Разбиваем на чанки
+          for (let j = 0; j < tariffs.length; j += IMPORT_CONFIG.chunkSize) {
+            if (abortControllerRef.current?.signal.aborted) break
+            
+            const chunk = tariffs.slice(j, j + IMPORT_CONFIG.chunkSize)
+            const chunkData = {
+              [cityKey]: {
+                ...cityData,
+                services: {
+                  [serviceKey]: {
+                    ...service,
+                    tariffs: chunk
+                  }
+                }
+              }
+            }
+            
+            try {
+              await axios.post('http://localhost:8888/api/upload-tariffs', chunkData, {
+                signal: abortControllerRef.current?.signal,
+                timeout: 30000
+              })
+              
+              successCount += chunk.length
+              setImportResults(prev => ({
+                ...prev,
+                success: prev.success + chunk.length
+              }))
+            } catch (error: any) {
+              failedCount += chunk.length
+              const errorMsg = `Ошибка при загрузке чанка ${j / IMPORT_CONFIG.chunkSize + 1}: ${error.message}`
+              errors.push(errorMsg)
+              
+              setImportResults(prev => ({
+                ...prev,
+                failed: prev.failed + chunk.length,
+                errors: [...prev.errors, errorMsg]
+              }))
+              
+              // Если сервер вернул 413, предлагаем уменьшить размер чанка
+              if (error.response?.status === 413) {
+                errors.push('Слишком большой чанк. Попробуйте уменьшить размер чанка в настройках импорта.')
+              }
+            }
+            
+            // Обновляем прогресс
+            setImportProgress(prev => ({
+              ...prev,
+              current: prev.current + chunk.length
+            }))
+            
+            // Добавляем задержку между чанками чтобы не перегружать сервер
+            if (j + IMPORT_CONFIG.chunkSize < tariffs.length) {
+              await new Promise(resolve => setTimeout(resolve, IMPORT_CONFIG.delayBetweenChunks))
+            }
+          }
+        }
+        
+        // Обновляем счетчик обработанных городов
+        setImportProgress(prev => ({
+          ...prev,
+          processedCities: prev.processedCities + 1
+        }))
+      }
+      
+      // Финальное состояние
+      setImportProgress(prev => ({
+        ...prev,
+        status: abortControllerRef.current?.signal.aborted ? 'idle' : 'completed'
+      }))
+      
+      // Показываем результаты
+      if (!abortControllerRef.current?.signal.aborted) {
+        if (failedCount === 0) {
+          showMessage(`✅ Успешно импортировано ${successCount} тарифов`)
+        } else {
+          setErrorMessage(`Импорт завершен с ошибками. Успешно: ${successCount}, Ошибок: ${failedCount}`)
+          setTimeout(() => setErrorMessage(''), 7000)
+        }
+        
+        // Обновляем данные
+        await fetchCities()
+      }
+      
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('Ошибка при обработке файла:', error)
+        setImportProgress(prev => ({ ...prev, status: 'error' }))
+        setImportResults(prev => ({
+          ...prev,
+          failed: prev.failed + 1,
+          errors: [...prev.errors, `Ошибка обработки файла: ${error.message}`]
+        }))
+        setErrorMessage('❌ Ошибка при обработке Excel файла')
+        setTimeout(() => setErrorMessage(''), 5000)
+      }
+    } finally {
+      abortControllerRef.current = null
+    }
+  }
+
+  // Функция для отмены импорта
+  const cancelImport = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      setImportProgress(prev => ({ ...prev, status: 'idle' }))
+      setErrorMessage('Импорт отменен')
+      setTimeout(() => setErrorMessage(''), 3000)
+    }
+  }
   const handleMassHide = async (hidden: boolean) => {
     if (selectedTariffs.size === 0) {
       setErrorMessage('Выберите хотя бы один тариф')
@@ -809,11 +1103,18 @@ export default function AdminPanel() {
       )}
 
       {/* Импорт из Excel */}
-      <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
+   <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-medium text-gray-900">Импорт тарифов из Excel</h3>
-            <p className="text-sm text-gray-500">Загрузите файл Excel для массового обновления тарифов</p>
+            <p className="text-sm text-gray-500">
+              Загрузите файл Excel для массового обновления тарифов. 
+              Большие файлы будут обработаны частями.
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Размер чанка: {IMPORT_CONFIG.chunkSize} тарифов, 
+              Задержка: {IMPORT_CONFIG.delayBetweenChunks}мс
+            </p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -823,120 +1124,86 @@ export default function AdminPanel() {
                 type="file" 
                 onChange={async (e) => {
                   const file = e.target.files?.[0]
-                  if (!file) return
-
-                  setUploadProgress(0)
-                  const timer = setInterval(() => {
-                    setUploadProgress(prev => Math.min(prev + 5, 90))
-                  }, 300)
-
-                  try {
-                    const data = await file.arrayBuffer()
-                    const workbook = XLSX.read(data)
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]]
-                    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' })
-
-                    const grouped: Record<string, any> = {}
-
-                    for (const row of rows as any[]) {
-                      const city = row['Город']?.trim() || 'неизвестно'
-                      const region = row['Регион']?.trim() || ''
-                      const category = (row['Категория'] || 'internet').trim()
-
-                      if (!grouped[city]) {
-                        grouped[city] = {
-                          meta: {
-                            name: city,
-                            region,
-                            timezone: 'Europe/Moscow'
-                          },
-                          services: {}
-                        }
-                      }
-
-                      if (!grouped[city].services[category]) {
-                        grouped[city].services[category] = {
-                          id: category,
-                          title: category,
-                          description: `Тарифы на ${category}`,
-                          meta: {
-                            description: `Тарифы на ${category}`,
-                            keywords: [category],
-                            ogImage: '/og/default.jpg'
-                          },
-                          tariffs: []
-                        }
-                      }
-
-                      const features = row['Особенности (через ;)']
-                        ? row['Особенности (через ;)'].split(';').map((f: string) => f.trim()).filter((f: string) => f)
-                        : []
-const tariff = {
-  id: Math.floor(Math.random() * 100000),
-  name: row['Название тарифа'] || '',
-  type: row['Тип'] || '',
-  speed: parseInt(row['Скорость']) || 0,
-  technology: row['Технология'] || '',
-  price: parseInt(row['Цена']) || 0,
-  discountPrice: parseInt(row['Цена со скидкой']) || 0,
-  discountPeriod: row['Период скидки'] || '',
-  discountPercentage: Math.round(
-    typeof row['Процент скидки'] === 'string'
-      ? parseFloat(row['Процент скидки'].replace('%', '').trim())
-      : (parseFloat(row['Процент скидки']) * 100)
-  ) || 0,
-  connectionPrice: parseInt(row['Цена подключения']) || 0, // ← ДОБАВЛЯЕМ
-  tvChannels: parseInt(row['Количество ТВ каналов']) || undefined,
-  mobileData: parseInt(row['Мобильные данные']) || undefined,
-  mobileMinutes: parseInt(row['Мобильные минуты']) || undefined,
-  buttonColor: (row['Цвет кнопки'] || '').toLowerCase() || 'orange',
-  isHit: row['Признак хита']?.toLowerCase() === 'да',
-  features
-}
-
-                      grouped[city].services[category].tariffs.push(tariff)
-                    }
-
-                    await axios.post('https://rtk-backend-4m0e.onrender.com/api/upload-tariffs', grouped)
-                    setUploadProgress(100)
-                    await fetchCities()
-                    showMessage('✅ Тарифы успешно загружены')
-                  } catch (error) {
-                    console.error(error)
-                    setErrorMessage('❌ Ошибка при загрузке тарифов')
-                    setTimeout(() => setErrorMessage(''), 5000)
-                  } finally {
-                    clearInterval(timer)
-                    setTimeout(() => setUploadProgress(0), 2000)
+                  if (file) {
+                    await handleExcelImport(file)
                   }
                 }}
-                accept=".xlsx,.xls"
+                accept=".xlsx,.xls,.csv"
+                disabled={importProgress.status === 'processing'}
                 className="block w-full text-sm text-gray-500
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-lg file:border-0
                   file:text-sm file:font-semibold
                   file:bg-purple-50 file:text-purple-700
-                  hover:file:bg-purple-100"
+                  hover:file:bg-purple-100
+                  disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </label>
+            
+            {importProgress.status === 'processing' && (
+              <button
+                onClick={cancelImport}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Отменить импорт
+              </button>
+            )}
           </div>
           
-          {uploadProgress > 0 && (
-            <div className="mt-4">
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium text-blue-700">
-                  {uploadProgress < 100 ? 'Импорт данных...' : 'Готово!'}
-                </span>
-                <span className="text-sm font-medium text-blue-700">
-                  {uploadProgress}%
-                </span>
+          {/* Прогресс импорта */}
+          {(importProgress.status === 'processing' || importProgress.status === 'completed') && (
+            <div className="mt-4 space-y-4">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-sm font-medium text-blue-700">
+                    {importProgress.status === 'processing' ? 'Импорт данных...' : 'Импорт завершен!'}
+                  </span>
+                  <span className="text-sm font-medium text-blue-700">
+                    {importProgress.current} / {importProgress.total} тарифов
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+                    style={{ 
+                      width: `${importProgress.total > 0 ? (importProgress.current / importProgress.total) * 100 : 0}%` 
+                    }}
+                  />
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Городы: {importProgress.processedCities} / {importProgress.totalCities}
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
+              
+              {/* Результаты импорта */}
+              {importProgress.status === 'completed' && (
+                <div className={`p-3 rounded-lg ${
+                  importResults.failed === 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  <p className="font-medium">
+                    {importResults.failed === 0 
+                      ? '✅ Все тарифы успешно импортированы' 
+                      : `⚠️ Импорт завершен с ошибками`}
+                  </p>
+                  <p className="text-sm mt-1">
+                    Успешно: {importResults.success}, Ошибок: {importResults.failed}
+                  </p>
+                  
+                  {importResults.errors.length > 0 && (
+                    <details className="mt-2 text-xs">
+                      <summary>Показать ошибки</summary>
+                      <ul className="mt-1 space-y-1">
+                        {importResults.errors.slice(0, 5).map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                        {importResults.errors.length > 5 && (
+                          <li>... и еще {importResults.errors.length - 5} ошибок</li>
+                        )}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

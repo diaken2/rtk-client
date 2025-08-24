@@ -54,6 +54,10 @@ const defaultFilters: Filters = {
   priceRange: [300, 1700],
   speedRange: [50, 1000],
 };
+interface TimeSlot {
+  value: string;
+  label: string;
+}
 const houseTypes = ["Квартира", "Частный дом", "Офис"];
 const supportOptions = [
   "Оплата услуг",
@@ -66,11 +70,118 @@ function TariffHelpForm() {
   const [phone, setPhone] = React.useState("");
   const [name, setName] = React.useState("");
   const [supportValue, setSupportValue] = React.useState<string | null>(null);
-  const isFormValid = phone.replace(/\D/g, "").length === 10 && name.trim().length > 1;
+  const [selectedTime, setSelectedTime] = React.useState("");
+  const [timeSlots, setTimeSlots] = React.useState<TimeSlot[]>([]);
+  const [isTimeDropdownOpen, setIsTimeDropdownOpen] = React.useState(false);
   const [submitted, setSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const router = useRouter();
   const { setSupportOnly } = useSupportOnly();
+  const timeDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Генерация временных слотов на основе текущего времени
+  React.useEffect(() => {
+    if (step === 'connection') {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      const slots: TimeSlot[] = [];
+
+      // Определяем рабочее время (6:00-21:00)
+      const isWorkingHours = currentHour >= 6 && currentHour < 21;
+
+      // Вне рабочего времени (21:00-6:00)
+      if (!isWorkingHours) {
+        slots.push({
+          value: 'out-of-hours',
+          label: 'Перезвоним в рабочее время'
+        });
+        
+        // Добавляем утренние слоты на завтра
+        for (let hour = 6; hour <= 11; hour++) {
+          slots.push({
+            value: `tomorrow-${hour}`,
+            label: `завтра с ${hour.toString().padStart(2, '0')}:00 до ${(hour + 1).toString().padStart(2, '0')}:00`
+          });
+        }
+        
+        setTimeSlots(slots);
+        setSelectedTime('out-of-hours');
+        return;
+      }
+
+      // Рабочее время (6:00-21:00)
+      // 1. ASAP вариант
+      slots.push({
+        value: 'asap',
+        label: 'Перезвоним в течение 15 минут'
+      });
+
+      // 2. Слоты на сегодня (каждые 15 минут до конца рабочего дня)
+      let slotHour = currentHour;
+      let slotMinute = Math.ceil(currentMinute / 15) * 15;
+      
+      if (slotMinute === 60) {
+        slotHour += 1;
+        slotMinute = 0;
+      }
+      
+      while (slotHour < 21 && slots.length < 8) {
+        let endMinute = slotMinute + 15;
+        let endHour = slotHour;
+        
+        if (endMinute >= 60) {
+          endHour += 1;
+          endMinute = endMinute - 60;
+        }
+        
+        // Пропускаем слоты, которые заканчиваются после 21:00
+        if (endHour > 21 || (endHour === 21 && endMinute > 0)) {
+          break;
+        }
+        
+        slots.push({
+          value: `today-${slotHour}-${slotMinute}`,
+          label: `сегодня ${slotHour.toString().padStart(2, '0')}:${slotMinute.toString().padStart(2, '0')}–${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`
+        });
+        
+        // Переходим к следующему слоту
+        slotMinute += 15;
+        if (slotMinute >= 60) {
+          slotHour += 1;
+          slotMinute = 0;
+        }
+      }
+
+      // 3. Слоты на завтра (если не набрали 8 пунктов)
+      if (slots.length < 8) {
+        for (let hour = 6; hour <= 11; hour++) {
+          if (slots.length >= 8) break;
+          slots.push({
+            value: `tomorrow-${hour}`,
+            label: `завтра ${hour.toString().padStart(2, '0')}:00–${(hour + 1).toString().padStart(2, '0')}:00`
+          });
+        }
+      }
+
+      setTimeSlots(slots);
+      setSelectedTime('asap');
+    }
+  }, [step]);
+
+  // Закрытие дропдауна при клике вне его
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (timeDropdownRef.current && !timeDropdownRef.current.contains(event.target as Node)) {
+        setIsTimeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const isFormValid = phone.replace(/\D/g, "").length === 10 && name.trim().length > 1 && selectedTime;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,12 +189,14 @@ function TariffHelpForm() {
     setSubmitted(true);
 
     try {
+      const selectedSlot = timeSlots.find(slot => slot.value === selectedTime);
       const result = await submitLead({
         type: step === 'connection' ? 'Новое подключение' : 'Поддержка существующего абонента',
         name: name,
         phone: phone,
         houseType: houseType,
         supportValue: supportValue || undefined,
+        callTime: selectedSlot?.label || selectedTime,
       });
 
       if (result.success) {
@@ -95,7 +208,6 @@ function TariffHelpForm() {
         }, 2000);
       } else {
         console.error('Failed to submit lead:', result.error);
-        // В случае ошибки все равно показываем успех пользователю
         setTimeout(() => {
           setSubmitted(false);
           setPhone(""); 
@@ -105,7 +217,6 @@ function TariffHelpForm() {
       }
     } catch (error) {
       console.error('Error submitting lead:', error);
-      // В случае ошибки все равно показываем успех пользователю
       setTimeout(() => {
         setSubmitted(false);
         setPhone(""); 
@@ -124,11 +235,22 @@ function TariffHelpForm() {
     }
   }, [step, supportValue, setSupportOnly]);
 
-  if (!step) {
+ if (!step) {
     return (
-      <div className="flex flex-col sm:flex-row justify-center gap-4">
-        <button className="bg-[#ff4d06] text-white font-bold rounded-full px-10 py-4 text-lg transition hover:bg-[#ff7f2a]" onClick={() => setStep('connection')}>Новое подключение</button>
-        <button className="bg-transparent border-2 border-white text-white font-bold rounded-full px-10 py-4 text-lg transition hover:bg-white hover:text-[#8000ff]" onClick={() => setStep('support')}>Я существующий абонент</button>
+      <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
+        <button 
+          className="bg-[#ff4d06] text-white font-bold rounded-full px-3 sm:px-6 md:px-10 py-2 sm:py-3 text-[11px] sm:text-sm md:text-lg transition hover:bg-[#ff7f2a] whitespace-nowrap min-h-[44px] flex items-center justify-center"
+          onClick={() => setStep('connection')}
+        >
+          Новое подключение
+        </button>
+        <button 
+          className="bg-transparent border-2 border-white text-white font-bold rounded-full px-3 sm:px-4 md:px-10 py-2 sm:py-3 text-[11px] sm:text-sm md:text-lg transition hover:bg-white hover:text-[#8000ff] whitespace-nowrap min-h-[44px] flex items-center justify-center"
+          onClick={() => setStep('support')}
+        >
+          <span className="hidden sm:inline">Я действующий абонент</span>
+          <span className="sm:hidden">Я абонент</span>
+        </button>
       </div>
     );
   }
@@ -190,10 +312,44 @@ function TariffHelpForm() {
               {submitted ? 'Отправлено!' : isSubmitting ? 'Отправляем...' : 'Жду звонка'}
             </button>
           </div>
-          {/* Подпись под полем */}
-          <div className="flex items-center gap-2 mt-3 justify-start">
-            <span className="text-white text-[13px] font-normal font-sans">Перезвоним в течение 15 минут</span>
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {/* Подпись под полем с выпадающим списком */}
+          <div className="flex items-center gap-2 mt-3 justify-start relative" ref={timeDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
+              className="text-white text-[13px] font-normal font-sans hover:underline flex items-center gap-1"
+            >
+              {timeSlots.find(slot => slot.value === selectedTime)?.label || 'Перезвоним в течение 15 минут'}
+              <svg 
+                className={`w-4 h-4 transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 10l5 5 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+
+            {isTimeDropdownOpen && (
+              <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg py-2 z-20 min-w-[250px] max-h-[200px] overflow-y-auto">
+                {timeSlots.map((slot) => (
+                  <button
+                    key={slot.value}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTime(slot.value);
+                      setIsTimeDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+                      selectedTime === slot.value 
+                        ? 'bg-[#FFF4F0] text-[#FF4D15] font-semibold' 
+                        : 'text-[#0F191E] hover:bg-gray-100'
+                    }`}
+                  >
+                    {slot.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           {/* Юридическая строка */}
           <p className="text-[12px] font-light font-sans mt-2 text-left text-[#D8B5FF]">Отправляя заявку, вы соглашаетесь с <a href="#" className="underline">политикой обработки персональных данных</a></p>
@@ -421,19 +577,20 @@ setFilters(prev => ({
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="bg-gradient-to-r from-[#F26A2E] to-[#7B2FF2] py-8 text-white">
+       <div className="flex flex-col min-h-screen">
+      {/* Херо-блок с адаптивными стилями */}
+      <div className="bg-gradient-to-r from-[#F26A2E] to-[#7B2FF2] py-6 sm:py-8 text-white">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-sm opacity-80 mb-2">
+          <div className="text-xs sm:text-sm opacity-80 mb-2">
             Ростелеком / {cityName} / <b>{titleservice}</b>
           </div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight">
             Тарифы Ростелеком на {service} в {cityName}
           </h1>
         </div>
       </div>
 
-      <main className="flex-grow container py-8 flex flex-col lg:flex-row gap-8">
+      <main className="flex-grow container py-6 sm:py-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
         <aside className="hidden lg:block lg:w-1/4 order-2 lg:order-1">
           <div className="card rounded-3xl p-4 shadow sticky top-4">
             <h3 className="text-lg font-bold mb-6">Фильтры</h3>
@@ -555,38 +712,38 @@ className={`px-4 py-2 rounded-full text-sm font-medium transition ${ isActiveCat
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <h2 className="text-2xl font-bold">
-                Доступные тарифы 
-                <span className="text-lg font-normal text-gray-600 ml-2">
-                  ({sortedTariffs.length})
-                </span>
-              </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Сортировка:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                  }}
-                  className="form-input py-2 text-sm min-w-[140px]"
-                >
-                  <option value="popular">Популярные</option>
-                  <option value="speed">Быстрые</option>
-                  <option value="price-low">Подешевле</option>
-                  <option value="price-high">Подороже</option>
-                </select>
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setIsMobileFiltersOpen(true)}
-                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setIsMobileFiltersOpen(true)}
-                  className="lg:hidden inline-flex items-center gap-1 text-sm font-medium text-rt-cta active:opacity-60"
-                >
-                  <FiFilter size={16} />
-                  Все фильтры
-                </span>
-              </div>
+         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
+              Доступные тарифы 
+              <span className="text-sm sm:text-lg font-normal text-gray-600 ml-2">
+                ({sortedTariffs.length})
+              </span>
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm text-gray-600">Сортировка:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => {
+                  setSortBy(e.target.value);
+                }}
+                className="form-input py-1 sm:py-2 text-xs sm:text-sm min-w-[120px] sm:min-w-[140px]"
+              >
+                <option value="popular">Популярные</option>
+                <option value="speed">Быстрые</option>
+                <option value="price-low">Подешевле</option>
+                <option value="price-high">Подороже</option>
+              </select>
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={() => setIsMobileFiltersOpen(true)}
+                onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setIsMobileFiltersOpen(true)}
+                className="lg:hidden inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-rt-cta active:opacity-60"
+              >
+                <FiFilter size={14} />
+                Фильтры
+              </span>
+            </div>
             </div>
 
           {sortedTariffs.length > 0 ? (
@@ -619,15 +776,19 @@ className={`px-4 py-2 rounded-full text-sm font-medium transition ${ isActiveCat
               </button>
             </div>
           )}
-            <section className="mt-12 rounded-3xl bg-[#7000FF] p-6 md:p-12 text-white flex flex-col items-center justify-center max-w-3xl mx-auto shadow-lg">
-              <div className="w-full flex flex-col gap-2 md:gap-4">
-                <h2 className="text-[28px] leading-[1.05] font-bold font-sans mb-2 md:mb-3 text-left text-white">Хотите быстро найти самый выгодный тариф?</h2>
-                <p className="text-[18px] leading-[1.2] font-normal font-sans mb-4 md:mb-6 text-left max-w-xl text-white">Подберите тариф с экспертом. Найдём для вас лучшее решение с учетом ваших пожеланий</p>
-                <SupportOnlyBlock>
-                  <TariffHelpForm />
-                </SupportOnlyBlock>
-              </div>
-            </section>
+            <section className="mt-8 sm:mt-12 rounded-2xl sm:rounded-3xl bg-[#7000FF] p-4 sm:p-6 md:p-8 lg:p-12 text-white flex flex-col items-center justify-center max-w-3xl mx-auto shadow-lg">
+            <div className="w-full flex flex-col gap-2 sm:gap-4">
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-[28px] leading-[1.05] font-bold font-sans mb-2 sm:mb-3 text-center sm:text-left text-white">
+                Хотите быстро найти самый выгодный тариф?
+              </h2>
+              <p className="text-sm sm:text-base md:text-[18px] leading-[1.2] font-normal font-sans mb-3 sm:mb-4 md:mb-6 text-center sm:text-left max-w-xl text-white">
+                Подберите тариф с экспертом. Найдём для вас лучшее решение с учетом ваших пожеланий
+              </p>
+              <SupportOnlyBlock>
+                <TariffHelpForm />
+              </SupportOnlyBlock>
+            </div>
+          </section>
         </div>
       </main>
 

@@ -687,87 +687,110 @@ export default function OrderBlock() {
         );
 
       case 7:
-        // Генерируем реальный календарь на ближайшие 2 недели
-        const today = new Date();
-        const calendarDays = [];
-        
-        // Начинаем с завтрашнего дня (сегодня нельзя выбрать)
-        for (let i = 1; i <= 14; i++) {
-          const date = new Date(today);
-          date.setDate(today.getDate() + i);
-          calendarDays.push({
-            day: date.getDate(),
-            fullDate: date,
-            dayOfWeek: date.getDay(),
-            isWeekend: date.getDay() === 0 || date.getDay() === 6
-          });
-        }
-        
-        return (
-          <div className="space-y-6">
-            <div className={`border rounded-lg p-4 cursor-pointer transition-all ${
-              formData.date.asap ? 'border-[#FF4B00] bg-[#FF4B0008]' : 'border-[#E0E0E0] hover:border-[#FF4B00]'
-            }`}>
-              <div className="flex items-center gap-3">
-                <Checkbox 
-                  checked={formData.date.asap} 
-                  onChange={() => handleInputChange('date', { ...formData.date, asap: !formData.date.asap })}
-                >
-                  <div>
-                    <div className="font-bold">Как можно быстрее</div>
-                    <div className="text-sm text-[#6D7683]">Наш специалист свяжется с вами в течение дня</div>
-                  </div>
-                </Checkbox>
-              </div>
-            </div>
-            
-            {!formData.date.asap && (
+      case 7:
+  // Генерируем реальный календарь на ближайшие 30 дней
+  const today = new Date();
+  const calendarDays = [];
+  
+  // Начинаем с завтрашнего дня (сегодня нельзя выбрать)
+  for (let i = 1; i <= 30; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    
+    // Русские названия дней недели
+    const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    const dayOfWeek = daysOfWeek[date.getDay()];
+    
+    calendarDays.push({
+      day: date.getDate(),
+      month: date.toLocaleDateString('ru-RU', { month: 'short' }),
+      fullDate: date,
+      dayOfWeek: dayOfWeek,
+      isWeekend: date.getDay() === 0 || date.getDay() === 6
+    });
+  }
+  
+  // Временные интервалы
+  const timeIntervals = [
+    '08:00-10:00', '10:00-12:00', '12:00-14:00', 
+    '14:00-16:00', '16:00-18:00', '18:00-20:00', '20:00-22:00'
+  ];
+  
+  return (
+    <div className="space-y-6">
+      <div className={`border rounded-lg p-4 cursor-pointer transition-all ${
+        formData.date.asap ? 'border-[#FF4B00] bg-[#FF4B0008]' : 'border-[#E0E0E0] hover:border-[#FF4B00]'
+      }`}>
+        <div className="flex items-center gap-3">
+          <Checkbox 
+            checked={formData.date.asap} 
+            onChange={() => handleInputChange('date', { ...formData.date, asap: !formData.date.asap })}
+          >
             <div>
-              <div className="font-bold mb-4">Выберите дату и время</div>
-              <div className="grid grid-cols-7 gap-2 mb-4">
-                {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-                  <div key={day} className="text-center text-sm font-medium py-2">
-                    {day}
-                  </div>
-                ))}
-                  {calendarDays.map((dateInfo, index) => (
-                    <div
-                      key={index}
-                      onClick={() => handleInputChange('date', { 
-                        ...formData.date, 
-                        day: dateInfo.day,
-                        fullDate: dateInfo.fullDate,
-                        dayOfWeek: dateInfo.dayOfWeek
-                      })}
-                    className={`text-center py-2 rounded cursor-pointer transition-all ${
-                        formData.date.day === dateInfo.day ? 'bg-[#FF4B00] text-white' : 'hover:bg-gray-100'
-                    }`}
-                  >
-                      {dateInfo.day}
-                  </div>
-                ))}
-              </div>
-              
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {['09:00-12:00', '12:00-15:00', '15:00-18:00', '18:00-21:00'].map(time => (
-                  <div
-                    key={time}
-                      onClick={() => handleInputChange('date', { ...formData.date, time })}
-                    className={`text-center py-2 border rounded cursor-pointer transition-all ${
-                        formData.date.time === time ? 'border-[#FF4B00] bg-[#FF4B00] text-white' : 'border-[#E0E0E0] hover:border-[#FF4B00]'
-                    }`}
-                  >
-                    {time}
-                  </div>
-                ))}
-              </div>
+              <div className="font-bold">Как можно быстрее</div>
+              <div className="text-sm text-[#6D7683]">Наш специалист свяжется с вами в течение дня</div>
             </div>
-            )}
-            
-            {errors.date && <div className="text-red-500 text-sm mt-1">{errors.date}</div>}
+          </Checkbox>
+        </div>
+      </div>
+      
+      {!formData.date.asap && (
+      <div>
+        <div className="font-bold mb-4">Выберите дату и время</div>
+        
+        {/* Календарь с горизонтальной прокруткой */}
+        <div className="mb-6">
+          <div className="flex space-x-2 overflow-x-auto pb-2 -mx-2 px-2">
+            {calendarDays.map((dateInfo, index) => (
+              <div
+                key={index}
+                onClick={() => handleInputChange('date', { 
+                  ...formData.date, 
+                  day: dateInfo.day,
+                  fullDate: dateInfo.fullDate,
+                  dayOfWeek: dateInfo.dayOfWeek
+                })}
+                className={`flex flex-col items-center justify-center w-16 h-16 rounded-lg cursor-pointer transition-all flex-shrink-0 ${
+                  formData.date.day === dateInfo.day 
+                    ? 'bg-[#FF4B00] text-white' 
+                    : dateInfo.isWeekend 
+                      ? 'bg-gray-100 text-gray-500' 
+                      : 'bg-white border border-gray-200 hover:border-[#FF4B00]'
+                }`}
+              >
+                <div className="text-xs font-medium">{dateInfo.dayOfWeek}</div>
+                <div className="text-lg font-bold">{dateInfo.day}</div>
+                <div className="text-xs opacity-70">{dateInfo.month}</div>
+              </div>
+            ))}
           </div>
-        );
-
+        </div>
+        
+        {/* Временные интервалы с горизонтальной прокруткой */}
+        <div>
+          <div className="text-sm font-medium mb-3">Выберите время:</div>
+          <div className="flex space-x-2 overflow-x-auto pb-2 -mx-2 px-2">
+            {timeIntervals.map((time, index) => (
+              <div
+                key={index}
+                onClick={() => handleInputChange('date', { ...formData.date, time })}
+                className={`px-4 py-2 rounded-lg cursor-pointer transition-all flex-shrink-0 whitespace-nowrap ${
+                  formData.date.time === time 
+                    ? 'bg-[#FF4B00] text-white border-[#FF4B00]' 
+                    : 'bg-white border border-gray-200 hover:border-[#FF4B00]'
+                }`}
+              >
+                {time}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      )}
+      
+      {errors.date && <div className="text-red-500 text-sm mt-1">{errors.date}</div>}
+    </div>
+  );
       case 8:
         return (
           <div className="space-y-6">

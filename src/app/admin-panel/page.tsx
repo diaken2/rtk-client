@@ -228,7 +228,7 @@ export default function AdminPanel() {
       setIsLoggedIn(true)
       fetchCities()
     }
-  }, [])
+  }, []) 
 
   // Загрузка городов
   const fetchCities = async () => {

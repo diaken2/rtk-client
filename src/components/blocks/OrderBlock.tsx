@@ -686,8 +686,8 @@ export default function OrderBlock() {
           </div>
         );
 
-      case 7:
-      case 7:
+      
+case 7:
   // Генерируем реальный календарь на ближайшие 30 дней
   const today = new Date();
   const calendarDays = [];
@@ -706,7 +706,8 @@ export default function OrderBlock() {
       month: date.toLocaleDateString('ru-RU', { month: 'short' }),
       fullDate: date,
       dayOfWeek: dayOfWeek,
-      isWeekend: date.getDay() === 0 || date.getDay() === 6
+      // УБИРАЕМ isWeekend, так как суббота и воскресенье тоже рабочие дни
+      // isWeekend: date.getDay() === 0 || date.getDay() === 6
     });
   }
   
@@ -753,9 +754,7 @@ export default function OrderBlock() {
                 className={`flex flex-col items-center justify-center w-16 h-16 rounded-lg cursor-pointer transition-all flex-shrink-0 ${
                   formData.date.day === dateInfo.day 
                     ? 'bg-[#FF4B00] text-white' 
-                    : dateInfo.isWeekend 
-                      ? 'bg-gray-100 text-gray-500' 
-                      : 'bg-white border border-gray-200 hover:border-[#FF4B00]'
+                    : 'bg-white border border-gray-200 hover:border-[#FF4B00]'
                 }`}
               >
                 <div className="text-xs font-medium">{dateInfo.dayOfWeek}</div>

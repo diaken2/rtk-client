@@ -1603,10 +1603,10 @@ const slug = city
                     key={category.id}
                     onClick={() => handleCategoryChange(category.id)}
                     className={`
-                      px-4 py-2 rounded-full text-sm font-medium transition
+                    px-5 py-3 rounded-full text-sm font-medium transition-all duration-200
                       ${activeCategory === category.id
-                        ? 'bg-rt-cta text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
+                        ? "bg-gradient-to-r from-[#FF6A2B] to-[#FF4D15] text-white shadow-lg shadow-orange-500/25" 
+                        : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300 hover:text-orange-600"}
                     `}
                   >
                     {category.label}
@@ -1684,15 +1684,32 @@ const slug = city
             )}
             
             {/* Блок подбора с экспертом */}
-            <section className="mt-12 rounded-3xl bg-[#7000FF] p-6 md:p-12 text-white flex flex-col items-center justify-center max-w-3xl mx-auto shadow-lg">
-              <div className="w-full flex flex-col gap-2 md:gap-4">
-                <h2 className="text-[28px] leading-[1.05] font-bold font-sans mb-2 md:mb-3 text-left text-white">Хотите быстро найти самый выгодный тариф?</h2>
-                <p className="text-[18px] leading-[1.2] font-normal font-sans mb-4 md:mb-6 text-left max-w-xl text-white">Подберите тариф с экспертом. Найдём для вас лучшее решение с учетом ваших пожеланий</p>
+            <section className="mt-16 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#7000FF] to-[#9B51E0] rounded-3xl transform skew-y-2"></div>
+            
+            <div className="relative z-10 bg-white/5 backdrop-blur-lg rounded-3xl p-8 md:p-12 border border-white/20">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 mx-auto mb-6 bg-white/10 rounded-full flex items-center justify-center">
+                  <span className="text-3xl">🎯</span>
+                </div>
+                
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                  Персональный подбор тарифа
+                </h2>
+                
+                <p className="text-lg text-white/90 max-w-2xl mx-auto">
+                  Наш специалист бесплатно подберёт идеальное решение 
+                  с учётом ваших потребностей и локации
+                </p>
+              </div>
+              
+             
                 <SupportOnlyBlock>
                   <TariffHelpForm />
                 </SupportOnlyBlock>
-              </div>
-            </section>
+             
+            </div>
+          </section>
           </div>
         </div>
       </main>

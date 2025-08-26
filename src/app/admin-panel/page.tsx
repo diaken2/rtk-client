@@ -528,7 +528,7 @@ const handleExcelImport = async (file: File) => {
             }
             
             try {
-              await axios.post('https://rtk-backend-4m0e.onrender.com/api/upload-tariffs', chunkData, {
+              await axios.post('http://localhost:8888/api/upload-tariffs', chunkData, {
                 signal: abortControllerRef.current?.signal,
                 timeout: 30000
               })

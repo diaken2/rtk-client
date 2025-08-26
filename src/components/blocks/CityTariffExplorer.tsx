@@ -617,13 +617,15 @@ const isAllCategory =
   return (
     <div className="flex flex-col min-h-screen">
          <HeroAddressSearch />
-      <main className="container py-8 flex-grow flex flex-col lg:flex-row gap-8">
-        <aside className="hidden lg:block w-1/4">
-          <div className="card sticky top-4 p-4 shadow rounded-xl">
-            <h3 className="text-lg font-semibold mb-4">Фильтры</h3>
+          <main className="flex-grow container py-6 sm:py-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
+        <aside className="hidden lg:block lg:w-1/4 order-2 lg:order-1">
+          <div className="card rounded-3xl p-4 shadow sticky top-4">
+            <h3 className="text-lg font-bold mb-6">Фильтры</h3>
 
-            {
-[
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">Услуги</h4>
+              <div className="space-y-3">
+                {[
   { key: 'internet', label: 'Интернет' },
   { key: 'tv', label: 'ТВ' },
   { key: 'mobile', label: 'Мобильная связь' },
@@ -644,163 +646,209 @@ const isAllCategory =
     <span>{item.label}</span>
   </label>
 ))}
+              </div>
+            </div>
 
-            {/* спецпредложения */}
-            <div className="my-4">
-               <h4 className="font-semibold mb-3">Спецпредложения</h4>
-              <label className="flex items-center space-x-2 mb-2">
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">Спецпредложения</h4>
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={filters.promotions}
                   onChange={() => handleFilterChange({ promotions: !filters.promotions })}
-                  className="checkbox-custom"
+                  className="checkbox-custom mr-3"
                 />
-                <span>% Акции</span>
+                <span className="text-sm">% Акции</span>
               </label>
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center cursor-pointer mt-2">
                 <input
                   type="checkbox"
                   checked={filters.hitsOnly}
                   onChange={() => handleFilterChange({ hitsOnly: !filters.hitsOnly })}
-                  className="checkbox-custom"
+                  className="checkbox-custom mr-3"
                 />
-                <span>Только хиты</span>
+                <span className="text-sm">Только хиты</span>
               </label>
             </div>
 
-            {/* цена */}
-    <div className="mb-6">
-            <h4 className="font-semibold mb-3">Стоимость в месяц (₽)</h4>
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>{filters.priceRange[0]}</span>
-              <span>{filters.priceRange[1]}</span>
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">Стоимость в месяц (₽)</h4>
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>{filters.priceRange[0]}</span>
+                <span>{filters.priceRange[1]}</span>
+              </div>
+              <Slider
+                range
+                min={300}
+                max={1700}
+                value={filters.priceRange}
+                onChange={(value) => Array.isArray(value) && handleFilterChange({ priceRange: value })}
+                trackStyle={[{ backgroundColor: '#FF6600' }]}
+                handleStyle={[{ borderColor: '#FF6600', backgroundColor: '#FF6600' }, { borderColor: '#FF6600', backgroundColor: '#FF6600' }]}
+                railStyle={{ backgroundColor: '#eee' }}
+              />
             </div>
-            <Slider
-              range
-              min={priceLimits.min}
-              max={priceLimits.max}
-              value={filters.priceRange}
-              onChange={(value) => Array.isArray(value) && handleFilterChange({ priceRange: value })}
-              trackStyle={[{ backgroundColor: '#FF6600' }]}
-              handleStyle={[{ borderColor: '#FF6600', backgroundColor: '#FF6600' }, { borderColor: '#FF6600', backgroundColor: '#FF6600' }]}
-              railStyle={{ backgroundColor: '#eee' }}
-            />
-          </div>
 
-            {/* скорость */}
-      <div className="mb-6">
-  <h4 className="font-semibold mb-3">Скорость (Мбит/с)</h4>
-  <div className="flex justify-between text-sm text-gray-600 mb-2">
-    <span>{filters.speedRange[0]}</span>
-    <span>{filters.speedRange[1]}</span>
-  </div>
-  <Slider
-    range
-    min={speedLimits.min}
-    max={speedLimits.max}
-    value={filters.speedRange}
-    onChange={(value) => Array.isArray(value) && handleFilterChange({ speedRange: value })}
-    trackStyle={[{ backgroundColor: '#FF6600' }]}
-    handleStyle={[{ borderColor: '#FF6600', backgroundColor: '#FF6600' }, { borderColor: '#FF6600', backgroundColor: '#FF6600' }]}
-    railStyle={{ backgroundColor: '#eee' }}
-  />
-</div>
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">Скорость (Мбит/с)</h4>
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>{filters.speedRange[0]}</span>
+                <span>{filters.speedRange[1]}</span>
+              </div>
+              <Slider
+                range
+                min={50}
+                max={1000}
+                value={filters.speedRange}
+                onChange={(value) => Array.isArray(value) && handleFilterChange({ speedRange: value })}
+                trackStyle={[{ backgroundColor: '#FF6600' }]}
+                handleStyle={[{ borderColor: '#FF6600', backgroundColor: '#FF6600' }, { borderColor: '#FF6600', backgroundColor: '#FF6600' }]}
+                railStyle={{ backgroundColor: '#eee' }}
+              />
+            </div>
           </div>
         </aside>
 
-        <div className="w-full lg:w-3/4">
-          <div className="mb-6 -mx-4 lg:mx-0">
-        <div className="flex gap-3 items-center px-4 overflow-x-auto">
-          <button
-            onClick={() => handleCategoryChange("all")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-              activeCategory === "all" ? "bg-rt-cta text-white" : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            Все
-          </button>
-          
-          {Object.entries(categoryMapping).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => handleCategoryChange(id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                activeCategory === id ? "bg-rt-cta text-white" : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+        <div key={`${activeCategory}-${JSON.stringify(filters)}`} className="w-full lg:w-3/4 order-1 lg:order-2">
+        <div className="mb-6 -mx-4 lg:mx-0">
+  <div className="flex gap-2 px-4 overflow-x-auto scroll-smooth whitespace-nowrap lg:flex-wrap lg:overflow-visible lg:whitespace-normal lg:gap-3">
+  <button
+  key="all"
+  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex-shrink-0 ${
+    activeCategory === "all"
+      ? "bg-gradient-to-r from-[#FF6A2B] to-[#FF4D15] text-white shadow-lg"
+      : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300"
+  }`}
+  onClick={() => {
+    handleCategoryChange("all"); 
+    router.push(`/${citySlug}`);
+  }}
+>
+  Все тарифы
+</button>
+    
+    {Object.entries(categoryMapping).map(([id, label]) => {
+      const expected = getServiceFiltersForCategory(id);
+      const isActive = activeCategory === id;
 
-          
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <h2 className="text-2xl font-bold">
-                Доступные тарифы 
-                <span className="text-lg font-normal text-gray-600 ml-2">
-                  ({filteredTariffs.length})
-                </span>
-              </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Сортировка:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                  }}
-                  className="form-input py-2 text-sm min-w-[140px]"
-                >
-                  <option value="popular">Популярные</option>
-                  <option value="speed">Быстрые</option>
-                  <option value="price-low">Подешевле</option>
-                  <option value="price-high">Подороже</option>
-                </select>
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setIsMobileFiltersOpen(true)}
-                  onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setIsMobileFiltersOpen(true)}
-                  className="lg:hidden inline-flex items-center gap-1 text-sm font-medium text-rt-cta active:opacity-60"
-                >
-                  <FiFilter size={16} />
-                  Все фильтры
-                </span>
-              </div>
-            </div>
+      return (
+        <button
+          key={id}
+          onClick={() => handleCategoryChange(id)}
+          className={`px-5 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
+            isActive 
+              ? "bg-gradient-to-r from-[#FF6A2B] to-[#FF4D15] text-white shadow-lg shadow-orange-500/25" 
+              : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300 hover:text-orange-600"
+          }`}
+        >
+          {label}
+        </button>
+      );
+    })}
+  </div>
+</div>
 
-          {sortedTariffs.length ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {sortedTariffs.slice(0, visibleCount).map((t) => (
-                <TariffCard key={t.id} tariff={t} onClick={() => setIsSegmentationModalOpen(true)} />
-              ))}
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+  <div>
+    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      Найдено {sortedTariffs.length} тарифов
+    </h2>
+    <p className="text-gray-600">
+      {activeCategory === 'all' ? 'Все категории' : `Категория: ${categoryMapping[activeCategory]}`}
+    </p>
+  </div>
+  
+  <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-gray-600 hidden sm:block">Сортировка:</span>
+      <select
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+        className="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-white"
+      >
+        <option value="popular">По популярности</option>
+        <option value="speed">По скорости ↑</option>
+        <option value="price-low">Цена ↑</option>
+        <option value="price-high">Цена ↓</option>
+      </select>
+    </div>
+    
+    <button
+      onClick={() => setIsMobileFiltersOpen(true)}
+      className="lg:hidden flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors"
+    >
+      <FiFilter size={16} />
+      Фильтры
+    </button>
+  </div>
+</div>
+
+          {sortedTariffs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           {sortedTariffs.slice(0, visibleCount).map((tariff) => (
+  <TariffCard
+    key={tariff.id}
+    tariff={tariff}
+    onClick={() => setIsSegmentationModalOpen(true)}
+  />
+))}
             </div>
           ) : (
-            <div className="text-center text-gray-600 py-12">
-              Тарифы не найдены
-              <div>
-                <button className="btn-secondary mt-4" onClick={resetFilters}>Сбросить фильтры</button>
-              </div>
-            </div>
+       <div className="text-center py-12 bg-white rounded-2xl shadow-sm">
+  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-orange-100 to-purple-100 rounded-full flex items-center justify-center">
+    <span className="text-3xl">🔍</span>
+  </div>
+  <h3 className="text-xl font-bold text-gray-800 mb-2">Тарифы не найдены</h3>
+  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+    Попробуйте изменить параметры фильтрации или выбрать другую категорию
+  </p>
+  <button
+    onClick={resetFilters}
+    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors"
+  >
+    Сбросить все фильтры
+  </button>
+</div>
           )}
-          {visibleCount < sortedTariffs.length && (
-            <div className="text-center mt-4">
-              <button className="btn-secondary" onClick={() => setVisibleCount(visibleCount + 5)}>Показать ещё</button>
-            </div>
-          )}
-               <section className="mt-12 rounded-3xl bg-[#7000FF] p-6 md:p-12 text-white flex flex-col items-center justify-center max-w-3xl mx-auto shadow-lg">
-              <div className="w-full flex flex-col gap-2 md:gap-4">
-                <h2 className="text-[28px] leading-[1.05] font-bold font-sans mb-2 md:mb-3 text-left text-white">Хотите быстро найти самый выгодный тариф?</h2>
-                <p className="text-[18px] leading-[1.2] font-normal font-sans mb-4 md:mb-6 text-left max-w-xl text-white">Подберите тариф с экспертом. Найдём для вас лучшее решение с учетом ваших пожеланий</p>
-                <SupportOnlyBlock>
-                  <TariffHelpForm />
-                </SupportOnlyBlock>
-              </div>
-            </section>
+       {visibleCount < sortedTariffs.length && (
+  <div className="text-center mt-8">
+    <button 
+      onClick={() => setVisibleCount(prev => Math.min(prev + 5, sortedTariffs.length))}
+      className="px-8 py-3 bg-gradient-to-r from-[#FF6A2B] to-[#FF4D15] text-white rounded-full font-medium hover:shadow-lg hover:shadow-orange-500/25 transition-all duration-200 transform hover:-translate-y-0.5"
+    >
+      Показать ещё 5 тарифов
+      <span className="ml-2 text-sm opacity-90">({sortedTariffs.length - visibleCount} осталось)</span>
+    </button>
+  </div>
+)}
+       <section className="mt-16 relative">
+  <div className="absolute inset-0 bg-gradient-to-r from-[#7000FF] to-[#9B51E0] rounded-3xl transform skew-y-2"></div>
+  
+  <div className="relative z-10 bg-white/5 backdrop-blur-lg rounded-3xl p-8 md:p-12 border border-white/20">
+    <div className="text-center mb-8">
+      <div className="w-20 h-20 mx-auto mb-6 bg-white/10 rounded-full flex items-center justify-center">
+        <span className="text-3xl">🎯</span>
+      </div>
+      
+      <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+        Персональный подбор тарифа
+      </h2>
+      
+      <p className="text-lg text-white/90 max-w-2xl mx-auto">
+        Наш специалист бесплатно подберёт идеальное решение 
+        с учётом ваших потребностей и локации
+      </p>
+    </div>
+    
+   
+      <SupportOnlyBlock>
+        <TariffHelpForm />
+      </SupportOnlyBlock>
+   
+  </div>
+</section>
         </div>
-        
       </main>
-
       {/* блоки */}
   
       <HowConnect onOpenSegmentationModal={() => setIsSegmentationModalOpen(true)} />

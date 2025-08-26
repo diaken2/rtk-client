@@ -579,16 +579,35 @@ setFilters(prev => ({
   return (
        <div className="flex flex-col min-h-screen">
       {/* Херо-блок с адаптивными стилями */}
-      <div className="bg-gradient-to-r from-[#F26A2E] to-[#7B2FF2] py-6 sm:py-8 text-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-xs sm:text-sm opacity-80 mb-2">
-            Ростелеком / {cityName} / <b>{titleservice}</b>
-          </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight">
-            Тарифы Ростелеком на {service} в {cityName}
-          </h1>
-        </div>
-      </div>
+  <div className="relative bg-gradient-to-r from-[#FF6A2B] via-[#FF4D15] to-[#9B51E0] py-12 sm:py-16 text-white overflow-hidden">
+  {/* Анимированный background */}
+  <div className="absolute inset-0">
+    <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full animate-pulse"></div>
+    <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full animate-pulse animation-delay-2000"></div>
+    <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-orange-500/10 rounded-full animate-pulse animation-delay-4000"></div>
+  </div>
+  
+  <div className="relative max-w-6xl mx-auto px-4">
+    {/* Хлебные крошки */}
+    <nav className="flex items-center gap-2 text-sm opacity-90 mb-6">
+      <span className="hover:underline cursor-pointer">Ростелеком</span>
+      <span className="opacity-50">›</span>
+      <span className="hover:underline cursor-pointer">{cityName}</span>
+      <span className="opacity-50">›</span>
+      <b className="text-white">{titleservice}</b>
+    </nav>
+    
+    {/* Заголовок */}
+    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6 max-w-3xl">
+      Тарифы на {service} в {cityName}
+      <span className="block text-xl sm:text-2xl text-white/80 mt-3">
+        Подключите интернет с выгодой до 40% в первый месяц
+      </span>
+    </h1>
+
+   
+  </div>
+</div>
 
       <main className="flex-grow container py-6 sm:py-8 flex flex-col lg:flex-row gap-6 sm:gap-8">
         <aside className="hidden lg:block lg:w-1/4 order-2 lg:order-1">
@@ -682,69 +701,76 @@ setFilters(prev => ({
           </div>
         </aside>
 
-        <div className="w-full lg:w-3/4 order-1 lg:order-2">
-          <div className="mb-6 -mx-4 lg:mx-0">
-            <div className="flex gap-3 items-center px-4 overflow-x-auto scroll-smooth whitespace-nowrap lg:flex-wrap lg:overflow-visible lg:whitespace-normal">
-               <button
-    key="all"
-    className={`px-4 py-2 rounded-full text-sm font-medium transition bg-gray-100 text-gray-700 hover:bg-gray-200s`}
-    onClick={() => router.push(`/${citySlug}`)}
-  >Все</button>
-            {Object.entries(categoryMapping).map(([id, label]) => {
-const expected = getServiceFiltersForCategory(id);
-const { internet, tv, mobile } = filters; // ← добавь эту строку
+        <div key={`${activeCategory}-${JSON.stringify(filters)}`} className="w-full lg:w-3/4 order-1 lg:order-2">
+        <div className="mb-6 -mx-4 lg:mx-0">
+  <div className="flex gap-2 px-4 overflow-x-auto scroll-smooth whitespace-nowrap lg:flex-wrap lg:overflow-visible lg:whitespace-normal lg:gap-3">
+    <button
+      key="all"
+      className={`px-5 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
+        activeCategory === "all" 
+          ? "bg-gradient-to-r from-[#FF6A2B] to-[#FF4D15] text-white shadow-lg shadow-orange-500/25" 
+          : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300 hover:text-orange-600"
+      }`}
+      onClick={() => router.push(`/${citySlug}`)}
+    >
+      Все тарифы
+    </button>
+    
+    {Object.entries(categoryMapping).map(([id, label]) => {
+      const expected = getServiceFiltersForCategory(id);
+      const isActive = activeCategory === id;
 
-const isActiveCategory =
-internet === expected.internet &&
-tv === expected.tv &&
-mobile === expected.mobile;
+      return (
+        <button
+          key={id}
+          onClick={() => handleCategoryChange(id)}
+          className={`px-5 py-3 rounded-full text-sm font-medium transition-all duration-200 ${
+            isActive 
+              ? "bg-gradient-to-r from-[#FF6A2B] to-[#FF4D15] text-white shadow-lg shadow-orange-500/25" 
+              : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300 hover:text-orange-600"
+          }`}
+        >
+          {label}
+        </button>
+      );
+    })}
+  </div>
+</div>
 
-return (
-<button
-key={id}
-onClick={() => handleCategoryChange(id)}
-className={`px-4 py-2 rounded-full text-sm font-medium transition ${ isActiveCategory ? "bg-rt-cta text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200" }`}
->
-{label}
-</button>
-);
-})}
-            </div>
-          </div>
-
-         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
-              Доступные тарифы 
-              <span className="text-sm sm:text-lg font-normal text-gray-600 ml-2">
-                ({sortedTariffs.length})
-              </span>
-            </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm text-gray-600">Сортировка:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value);
-                }}
-                className="form-input py-1 sm:py-2 text-xs sm:text-sm min-w-[120px] sm:min-w-[140px]"
-              >
-                <option value="popular">Популярные</option>
-                <option value="speed">Быстрые</option>
-                <option value="price-low">Подешевле</option>
-                <option value="price-high">Подороже</option>
-              </select>
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={() => setIsMobileFiltersOpen(true)}
-                onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setIsMobileFiltersOpen(true)}
-                className="lg:hidden inline-flex items-center gap-1 text-xs sm:text-sm font-medium text-rt-cta active:opacity-60"
-              >
-                <FiFilter size={14} />
-                Фильтры
-              </span>
-            </div>
-            </div>
+       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+  <div>
+    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      Найдено {sortedTariffs.length} тарифов
+    </h2>
+    <p className="text-gray-600">
+      {activeCategory === 'all' ? 'Все категории' : `Категория: ${categoryMapping[activeCategory]}`}
+    </p>
+  </div>
+  
+  <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-gray-600 hidden sm:block">Сортировка:</span>
+      <select
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+        className="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-white"
+      >
+        <option value="popular">По популярности</option>
+        <option value="speed">По скорости ↑</option>
+        <option value="price-low">Цена ↑</option>
+        <option value="price-high">Цена ↓</option>
+      </select>
+    </div>
+    
+    <button
+      onClick={() => setIsMobileFiltersOpen(true)}
+      className="lg:hidden flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors"
+    >
+      <FiFilter size={16} />
+      Фильтры
+    </button>
+  </div>
+</div>
 
           {sortedTariffs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -757,38 +783,59 @@ className={`px-4 py-2 rounded-full text-sm font-medium transition ${ isActiveCat
 ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-bold text-gray-700 mb-2">Тарифы не найдены</h3>
-              <p className="text-gray-600 mb-6">Попробуйте изменить параметры фильтрации</p>
-              <button
-                onClick={resetFilters}
-                className="btn-secondary"
-              >
-                Сбросить фильтры
-              </button>
-            </div>
+       <div className="text-center py-12 bg-white rounded-2xl shadow-sm">
+  <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-orange-100 to-purple-100 rounded-full flex items-center justify-center">
+    <span className="text-3xl">🔍</span>
+  </div>
+  <h3 className="text-xl font-bold text-gray-800 mb-2">Тарифы не найдены</h3>
+  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+    Попробуйте изменить параметры фильтрации или выбрать другую категорию
+  </p>
+  <button
+    onClick={resetFilters}
+    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-full font-medium hover:bg-gray-200 transition-colors"
+  >
+    Сбросить все фильтры
+  </button>
+</div>
           )}
-          {visibleCount < sortedTariffs.length && (
-            <div className="text-center mt-6">
-              <button className="btn-secondary" onClick={() => setVisibleCount(prev => Math.min(prev + 5, sortedTariffs.length))}>
-                Показать ещё
-              </button>
-            </div>
-          )}
-            <section className="mt-8 sm:mt-12 rounded-2xl sm:rounded-3xl bg-[#7000FF] p-4 sm:p-6 md:p-8 lg:p-12 text-white flex flex-col items-center justify-center max-w-3xl mx-auto shadow-lg">
-            <div className="w-full flex flex-col gap-2 sm:gap-4">
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-[28px] leading-[1.05] font-bold font-sans mb-2 sm:mb-3 text-center sm:text-left text-white">
-                Хотите быстро найти самый выгодный тариф?
-              </h2>
-              <p className="text-sm sm:text-base md:text-[18px] leading-[1.2] font-normal font-sans mb-3 sm:mb-4 md:mb-6 text-center sm:text-left max-w-xl text-white">
-                Подберите тариф с экспертом. Найдём для вас лучшее решение с учетом ваших пожеланий
-              </p>
-              <SupportOnlyBlock>
-                <TariffHelpForm />
-              </SupportOnlyBlock>
-            </div>
-          </section>
+       {visibleCount < sortedTariffs.length && (
+  <div className="text-center mt-8">
+    <button 
+      onClick={() => setVisibleCount(prev => Math.min(prev + 5, sortedTariffs.length))}
+      className="px-8 py-3 bg-gradient-to-r from-[#FF6A2B] to-[#FF4D15] text-white rounded-full font-medium hover:shadow-lg hover:shadow-orange-500/25 transition-all duration-200 transform hover:-translate-y-0.5"
+    >
+      Показать ещё 5 тарифов
+      <span className="ml-2 text-sm opacity-90">({sortedTariffs.length - visibleCount} осталось)</span>
+    </button>
+  </div>
+)}
+       <section className="mt-16 relative">
+  <div className="absolute inset-0 bg-gradient-to-r from-[#7000FF] to-[#9B51E0] rounded-3xl transform skew-y-2"></div>
+  
+  <div className="relative z-10 bg-white/5 backdrop-blur-lg rounded-3xl p-8 md:p-12 border border-white/20">
+    <div className="text-center mb-8">
+      <div className="w-20 h-20 mx-auto mb-6 bg-white/10 rounded-full flex items-center justify-center">
+        <span className="text-3xl">🎯</span>
+      </div>
+      
+      <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+        Персональный подбор тарифа
+      </h2>
+      
+      <p className="text-lg text-white/90 max-w-2xl mx-auto">
+        Наш специалист бесплатно подберёт идеальное решение 
+        с учётом ваших потребностей и локации
+      </p>
+    </div>
+    
+   
+      <SupportOnlyBlock>
+        <TariffHelpForm />
+      </SupportOnlyBlock>
+   
+  </div>
+</section>
         </div>
       </main>
 

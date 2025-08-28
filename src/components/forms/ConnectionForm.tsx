@@ -175,7 +175,8 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
 
   const validateField = (field: 'phone' | 'name', value: string) => {
     if (field === 'phone') {
-      const phoneRegex = /^\(\d{3}\)\s?\d{3}-\d{2}-\d{2}$/;
+      // Используем то же регулярное выражение, что и в isFormValid
+      const phoneRegex = /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/;
       if (!phoneRegex.test(value)) {
         setErrors(prev => ({ ...prev, phone: 'Введите корректный номер телефона' }));
         return false;
@@ -191,6 +192,7 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
     return true;
   };
 
+  // Исправленные регулярные выражения - должны быть одинаковыми
   const isValidPhone = /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/.test(phone);
   const isValidName = /^[А-ЯЁа-яё\s-]{2,30}$/.test(name.trim());
   const isFormValid = isValidPhone && isValidName && selectedTime;
@@ -334,8 +336,8 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
                   value={phone}
                   inputRef={phoneInputRef}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setPhone(e.target.value);
-                    if (errors.phone) validateField('phone', e.target.value);
+                    setPhone('+7 ' + e.target.value);
+                    if (errors.phone) validateField('phone', '+7 ' + e.target.value);
                   }}
                   onBlur={() => validateField('phone', phone)}
                   className={`w-full h-12 pl-14 pr-5 border rounded-[36px] text-lg transition-all ${

@@ -22,30 +22,14 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
   const [selectedTime, setSelectedTime] = useState('');
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [isTimeDropdownOpen, setIsTimeDropdownOpen] = useState(false);
-  const [touched, setTouched] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [errors, setErrors] = useState<{ phone?: string; name?: string }>({});
   const router = useRouter();
   const { isSupportOnly } = useSupportOnly();
   const modalRef = useRef<HTMLDivElement>(null);
   const timeDropdownRef = useRef<HTMLDivElement>(null);
-  const phoneInputRef = useRef<HTMLInputElement>(null);
-  const [shouldOpenUp, setShouldOpenUp] = useState(false);
 
-  // Определение мобильного устройства
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Генерация временных слотов на основе текущего времени
+  // Генерация временных слотов (как в оригинальном коде)
   useEffect(() => {
     if (isOpen) {
       const now = new Date();
@@ -135,7 +119,7 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
     }
   }, [isOpen]);
 
-  // Обработка клика вне модалки и дропдауна
+  // Обработка клика вне модалки
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -146,45 +130,29 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
       }
     };
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (isTimeDropdownOpen && timeDropdownRef.current) {
-      const rect = timeDropdownRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setShouldOpenUp(spaceBelow < 350);
-    }
-  }, [isTimeDropdownOpen]);
-
   const validateField = (field: 'phone' | 'name', value: string) => {
     if (field === 'phone') {
-      // Используем то же регулярное выражение, что и в isFormValid
-      const phoneRegex = /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/;
-      if (!phoneRegex.test(value)) {
-        setErrors(prev => ({ ...prev, phone: 'Введите корректный номер телефона' }));
+      const phoneRegex = /^\d{10}$/;
+      const cleanValue = value.replace(/\D/g, '');
+      if (!phoneRegex.test(cleanValue)) {
+        setErrors(prev => ({ ...prev, phone: 'Введите 10 цифр' }));
         return false;
       }
     } else if (field === 'name') {
       const nameRegex = /^[А-ЯЁа-яё\s-]{2,30}$/;
       if (!nameRegex.test(value.trim())) {
-        setErrors(prev => ({ ...prev, name: 'Только кириллические символы' }));
+        setErrors(prev => ({ ...prev, name: 'Только кириллица' }));
         return false;
       }
     }
@@ -192,66 +160,41 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
     return true;
   };
 
-  // Исправленные регулярные выражения - должны быть одинаковыми
-  const isValidPhone = /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/.test(phone);
+  const isValidPhone = /^\d{10}$/.test(phone.replace(/\D/g, ''));
   const isValidName = /^[А-ЯЁа-яё\s-]{2,30}$/.test(name.trim());
   const isFormValid = isValidPhone && isValidName && selectedTime;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched(true);
     
-    // Валидация всех полей
     const isPhoneValid = validateField('phone', phone);
     const isNameValid = validateField('name', name);
     
     if (!isPhoneValid || !isNameValid || !selectedTime) return;
 
     setIsSubmitting(true);
-    setSubmitted(true);
 
     try {
       const selectedSlot = timeSlots.find(slot => slot.value === selectedTime);
-      const result = await submitLead({
+      const cleanPhone = phone.replace(/\D/g, '');
+      const fullPhone = `+7${cleanPhone}`;
+      
+      await submitLead({
         type: 'Заявка на подключение',
         name: name,
-        phone: phone,
+        phone: fullPhone,
         callTime: selectedSlot?.label || selectedTime,
       });
 
-      if (result.success) {
-        setTimeout(() => {
-          setSubmitted(false);
-          setPhone('');
-          setName('');
-          setSelectedTime('');
-          setTouched(false);
-          onClose();
-          router.push('/complete');
-        }, 2000);
-      } else {
-        console.error('Failed to submit lead:', result.error);
-        setTimeout(() => {
-          setSubmitted(false);
-          setPhone('');
-          setName('');
-          setSelectedTime('');
-          setTouched(false);
-          onClose();
-          router.push('/complete');
-        }, 2000);
-      }
-    } catch (error) {
-      console.error('Error submitting lead:', error);
       setTimeout(() => {
-        setSubmitted(false);
         setPhone('');
         setName('');
         setSelectedTime('');
-        setTouched(false);
         onClose();
         router.push('/complete');
-      }, 2000);
+      }, 1000);
+    } catch (error) {
+      console.error('Error submitting lead:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -261,17 +204,33 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
   
   if (isSupportOnly) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-45 flex items-center justify-center z-[1000] p-4">
-        <div className="bg-white rounded-xl shadow-lg w-full max-w-md relative flex flex-col items-center justify-center p-8">
-          <h2 className="text-2xl font-bold mb-4 text-center">Вы являетесь действующим абонентом Ростелеком</h2>
-          <p className="text-gray-600 mb-4 text-center">Мы не сможем ответить на вопросы по действующему подключению или сменить ваш текущий тариф.</p>
-          <div className="bg-blue-50 rounded-xl p-4 mb-4 text-center">
-            <p className="text-gray-700 mb-2 font-medium">Рекомендуем позвонить по номеру</p>
-            <a href="tel:88001000800" className="text-2xl font-bold text-blue-600 tracking-wider block mb-1 hover:underline">8 800 100-08-00</a>
-            <p className="text-sm text-gray-500">Звонок бесплатный по РФ</p>
-          </div>
-          <div className="text-base text-center">
-            или узнать информацию в <a href="https://lk.rt.ru/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-700">личном кабинете</a>
+      <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+          
+          <div className="p-6 text-center">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/>
+              </svg>
+            </div>
+            
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Вы являетесь действующим абонентом</h2>
+            <p className="text-gray-600 text-sm mb-4">Для вопросов по текущему подключению обратитесь в поддержку</p>
+            
+            <div className="bg-blue-50 rounded-lg p-4 mb-4">
+              <a href="tel:88001000800" className="text-lg font-bold text-blue-600 hover:text-blue-700 block mb-1">
+                8 800 100-08-00
+              </a>
+              <p className="text-xs text-blue-500">Бесплатно по России</p>
+            </div>
+            
+            <button
+              onClick={onClose}
+              className="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors w-full"
+            >
+              Понятно
+            </button>
           </div>
         </div>
       </div>
@@ -279,92 +238,72 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-45 flex items-center justify-center z-[1000] p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
       <div
-        className={
-          isMobile
-            ? "fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-[1001] overflow-y-auto"
-            : "w-[500px] max-w-[90vw] bg-white rounded-[24px] relative shadow-xl"
-        }
-        style={isMobile ? { maxHeight: '90vh' } : {}}
+        className="w-full max-w-sm bg-white rounded-2xl shadow-2xl relative overflow-hidden"
         ref={modalRef}
       >
-        {isMobile && (
-          <div className="sticky top-0 bg-white py-4 px-4 flex justify-center border-b z-10">
-            <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
-          </div>
-        )}
-        
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-500"></div>
+
         <button 
           onClick={onClose}
-          className={
-            isMobile
-              ? "absolute top-4 right-4 w-10 h-10 rounded-full bg-[#E9E9E9] text-[#6E6E6E] text-xl border-0 cursor-pointer hover:bg-[#DCDCDC] transition-colors flex items-center justify-center z-10"
-              : "absolute top-6 right-6 w-10 h-10 rounded-full bg-[#E9E9E9] text-[#6E6E6E] text-xl border-0 cursor-pointer hover:bg-[#DCDCDC] transition-colors flex items-center justify-center"
-          }
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-100 text-gray-500 text-lg hover:bg-gray-200 transition-colors flex items-center justify-center z-10"
         >
           ×
         </button>
 
-        <div className={isMobile ? "p-4" : "p-8"}>
-          <h2 className="text-2xl md:text-[28px] font-bold text-[#1B1B1B] mb-2 text-center">
-            Заявка на подключение
-          </h2>
-          <p className="mb-6 text-center text-[#6E6E6E] text-lg">
-            Перезвоним для уточнения деталей<br/>и согласования времени установки
-          </p>
+        <div className="p-6">
+          {/* Заголовок */}
+          <div className="text-center mb-4">
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 p-2 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/>
+                <path d="M8 10h8v2H8zm0 3h8v2H8z"/>
+              </svg>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Заявка на подключение</h2>
+            <p className="text-gray-600 text-sm">
+              Перезвоним для уточнения деталей<br/>и согласования времени установки
+            </p>
+          </div>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Поле телефона */}
             <div>
-              <label className="block text-[#1B1B1B] mb-2 font-medium flex items-center">
-                Телефон
-                {errors.phone && (
-                  <span className="ml-2 text-xs text-red-500 flex items-center">
-                    <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                    </svg>
-                    {errors.phone}
-                  </span>
-                )}
-              </label>
+              <label className="block text-gray-700 mb-1 text-sm font-medium">Телефон</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 font-semibold text-[#1B1B1B] z-10">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium z-10">
                   +7
                 </span>
                 <InputMask
                   mask="(999) 999-99-99"
                   value={phone}
-                  inputRef={phoneInputRef}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setPhone('+7 ' + e.target.value);
-                    if (errors.phone) validateField('phone', '+7 ' + e.target.value);
+                    setPhone(e.target.value);
+                    if (errors.phone) validateField('phone', e.target.value);
                   }}
                   onBlur={() => validateField('phone', phone)}
-                  className={`w-full h-12 pl-14 pr-5 border rounded-[36px] text-lg transition-all ${
+                  className={`w-full h-11 pl-12 pr-3 border rounded-lg text-base transition-all ${
                     errors.phone 
-                      ? 'border-2 border-[#E63946]' 
-                      : 'border border-[#C5C5C5] hover:border-[#9C9C9C] focus:border-2 focus:border-[#FF4D15] focus:shadow-[0_0_0_2px_rgba(255,77,21,0.25)]'
+                      ? 'border-red-400 bg-red-50' 
+                      : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                   }`}
                   placeholder="(___) ___-__-__"
                   type="tel"
-                  autoComplete="tel"
-                  aria-invalid={!!errors.phone}
                 />
+              </div>
+              {/* Минимальное место для ошибки */}
+              <div className="min-h-[18px] mt-0.5">
+                {errors.phone && (
+                  <p className="text-red-500 text-xs animate-fadeIn">{errors.phone}</p>
+                )}
               </div>
             </div>
 
+            {/* Поле имени */}
             <div>
-              <label className="block text-[#1B1B1B] mb-2 font-medium flex items-center">
-                Имя
-                {errors.name && (
-                  <span className="ml-2 text-xs text-red-500 flex items-center">
-                    <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                    </svg>
-                    {errors.name}
-                  </span>
-                )}
-              </label>
+              <label className="block text-gray-700 mb-1 text-sm font-medium">Имя</label>
               <input
                 type="text"
                 value={name}
@@ -373,43 +312,44 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
                   if (errors.name) validateField('name', e.target.value);
                 }}
                 onBlur={() => validateField('name', name)}
-                className={`w-full h-12 px-5 border rounded-[36px] text-lg transition-all placeholder-[#B3B3B3] ${
+                className={`w-full h-11 px-3 border rounded-lg text-base transition-all ${
                   errors.name 
-                    ? 'border-2 border-[#E63946]' 
-                    : 'border border-[#C5C5C5] hover:border-[#9C9C9C] focus:border-2 focus:border-[#FF4D15] focus:shadow-[0_0_0_2px_rgba(255,77,21,0.25)]'
+                    ? 'border-red-400 bg-red-50' 
+                    : 'border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500'
                 }`}
-                placeholder="Имя"
-                autoComplete="name"
-                aria-invalid={!!errors.name}
+                placeholder="Ваше имя"
               />
+              {/* Минимальное место для ошибки */}
+              <div className="min-h-[18px] mt-0.5">
+                {errors.name && (
+                  <p className="text-red-500 text-xs animate-fadeIn">{errors.name}</p>
+                )}
+              </div>
             </div>
 
+            {/* Выбор времени */}
             <div className="relative" ref={timeDropdownRef}>
-              <label className="block text-[#1B1B1B] mb-2 font-medium">Время звонка</label>
+              <label className="block text-gray-700 mb-1 text-sm font-medium">Время звонка</label>
               <button
                 type="button"
                 onClick={() => setIsTimeDropdownOpen(!isTimeDropdownOpen)}
-                className={`w-full inline-flex items-center justify-between gap-2 text-base cursor-pointer p-3 border rounded-[36px] hover:border-[#9C9C9C] transition-colors
-                  ${selectedTime === 'asap' ? 'text-[#0F191E]' : 'text-[#FF4D15] font-semibold'} ${
-                  isTimeDropdownOpen ? 'border-[#FF4D15] border-2' : 'border-[#C5C5C5]'
-                }`}
-                style={{ background: 'none', outline: 'none', boxShadow: 'none' }}
+                className="w-full h-11 px-3 border border-gray-300 rounded-lg text-left text-base hover:border-gray-400 transition-colors flex items-center justify-between"
               >
-                <span>{timeSlots.find(slot => slot.value === selectedTime)?.label || 'Выберите время'}</span>
+                <span className="truncate text-sm">
+                  {timeSlots.find(slot => slot.value === selectedTime)?.label || 'Выберите время'}
+                </span>
                 <svg 
-                  className={`w-6 h-6 transition-transform duration-200 ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 text-gray-500 transition-transform ${isTimeDropdownOpen ? 'rotate-180' : ''}`}
                   fill="none" 
-                  viewBox="0 0 32 32"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <path d="M16.0008 19.6668C15.8674 19.6668 15.7452 19.6445 15.6341 19.6001C15.523 19.5557 15.423 19.4779 15.3341 19.3668L9.00078 13.0334C8.86745 12.9001 8.80078 12.7223 8.80078 12.5001C8.80078 12.2779 8.86745 12.1001 9.00078 11.9668C9.17856 11.789 9.36189 11.7112 9.55078 11.7334C9.73967 11.7557 9.91189 11.8334 10.0674 11.9668L16.0008 17.9001L21.9341 11.9668C22.0674 11.8334 22.2452 11.7612 22.4674 11.7501C22.6897 11.739 22.8674 11.8112 23.0008 11.9668C23.1786 12.1223 23.2563 12.3057 23.2341 12.5168C23.2119 12.7279 23.1341 12.9112 23.0008 13.0668L16.6674 19.3668C16.5786 19.4779 16.4786 19.5557 16.3674 19.6001C16.2563 19.6445 16.1341 19.6668 16.0008 19.6668Z" fill="#0F191E"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {isTimeDropdownOpen && (
-                <div className={`absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-lg py-2 z-20 ${
-                  shouldOpenUp ? 'bottom-full mb-2' : 'top-full'
-                } max-h-[50vh] overflow-y-auto border border-gray-200`}
-                >
+                <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-40 overflow-y-auto">
                   {timeSlots.map((slot) => (
                     <button
                       key={slot.value}
@@ -418,13 +358,11 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
                         setSelectedTime(slot.value);
                         setIsTimeDropdownOpen(false);
                       }}
-                      className={`w-full px-6 py-3 text-left transition-colors ${
+                      className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                         selectedTime === slot.value 
-                          ? 'bg-[#FFF4F0] text-[#FF4D15] font-semibold' 
-                          : 'text-[#0F191E] hover:bg-gray-100'
+                          ? 'bg-orange-50 text-orange-700' 
+                          : 'hover:bg-gray-50'
                       }`}
-                      role="option"
-                      aria-selected={selectedTime === slot.value}
                     >
                       {slot.label}
                     </button>
@@ -433,36 +371,48 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
               )}
             </div>
 
+            {/* Кнопка отправки */}
             <button
               type="submit"
-              disabled={!isFormValid || submitted || isSubmitting}
-              className={`w-full h-14 rounded-[36px] text-lg font-semibold transition-all duration-300 flex items-center justify-center mt-8 ${
-                isFormValid && !submitted && !isSubmitting 
-                  ? 'bg-[#FF4D15] text-white hover:bg-[#E34612] shadow-md hover:shadow-lg transform hover:-translate-y-0.5' 
-                  : 'bg-gray-200 text-gray-500'
+              disabled={!isFormValid || isSubmitting}
+              className={`w-full h-11 rounded-lg font-semibold transition-all duration-200 mt-2 ${
+                isFormValid && !isSubmitting
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shadow-md hover:shadow-lg'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
-              aria-disabled={!isFormValid || submitted || isSubmitting}
             >
               {isSubmitting ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                <div className="flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                   Отправка...
-                </>
-              ) : submitted ? (
-                'Отправлено!'
+                </div>
               ) : (
                 'Получить консультацию'
               )}
             </button>
           </form>
           
-          <p className="text-xs text-[#6E6E6E] text-center mt-6">
-            Отправляя, вы соглашаетесь с <Link href="/privacy" className="underline text-[#174A8D]">политикой обработки данных</Link>
-          </p>
+          {/* Футер */}
+          <div className="mt-3 text-center">
+            <p className="text-xs text-gray-500">
+              Отправляя, вы соглашаетесь с{' '}
+              <Link href="/privacy" className="text-blue-600 hover:text-blue-800 underline">
+                политикой обработки данных
+              </Link>
+            </p>
+          </div>
         </div>
+
+        {/* Добавляем CSS для анимации */}
+        <style jsx>{`
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-2px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 0.2s ease-in-out;
+          }
+        `}</style>
       </div>
     </div>
   );

@@ -116,8 +116,8 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
                   </svg>
                 </div>
                 <div>
-                  <a href="tel:+78003507370" className="text-xl font-bold text-[#174A8D] hover:underline block" style={{letterSpacing: 0.7}}>
-                    8 800 350-73-70
+                  <a href="tel:+79956738579" className="text-xl font-bold text-[#174A8D] hover:underline block" style={{letterSpacing: 0.7}}>
+                    8 995 673-85-79
                   </a>
                   <div className="text-sm text-[#6E6E6E]">Звонок бесплатный по РФ</div>
                 </div>

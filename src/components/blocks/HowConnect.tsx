@@ -26,7 +26,7 @@ export default function HowConnect({ onOpenSegmentationModal }: HowConnectProps)
               <>Вы оставляете заявку на сайте</>
             ) : (
               <>
-                Вы оставляете <button className="text-rt-cta underline" type="button" onClick={onOpenSegmentationModal}>заявку</button> на сайте или звоните по телефону <a className="text-rt-cta font-semibold" href="tel:88003507370">8 800 350-73-70</a>
+                Вы оставляете <button className="text-rt-cta underline" type="button" onClick={onOpenSegmentationModal}>заявку</button> на сайте или звоните по телефону <a className="text-rt-cta font-semibold" href="tel:89956738579">8 995 673-85-79</a>
               </>
             )}
           </p>

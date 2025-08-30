@@ -362,8 +362,8 @@ export default function ContactsBlock({cityName}:any) {
                   <div className="space-y-3">
                     <div className="flex items-center">
                       <span className="font-medium text-gray-700 w-48">Телефон для подключения:</span>
-                      <a href="tel:88003509015" className="text-rt-cta font-semibold hover:underline">
-                        8 800 350-90-15
+                      <a href="tel:89956738579" className="text-rt-cta font-semibold hover:underline">
+                        8 995 673-85-79
                       </a>
                     </div>
                     <div className="flex items-center">

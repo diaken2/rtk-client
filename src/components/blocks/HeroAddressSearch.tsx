@@ -75,7 +75,31 @@ interface CityDropdownProps {
 function CityDropdown({ isOpen, onClose, onSelect, currentCity }: CityDropdownProps) {
   const [query, setQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
-
+   const [regionsData, setRegionsData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    if (isOpen) {
+      const fetchRegions = async () => {
+        try {
+          setIsLoading(true);
+          const response = await fetch('https://rtk-backend-4m0e.onrender.com/api/regions');
+          if (response.ok) {
+            const data = await response.json();
+            setRegionsData(data);
+          } else {
+            console.error('Ошибка загрузки регионов');
+            // Можно загрузить fallback данные или показать ошибку
+          }
+        } catch (error) {
+          console.error('Ошибка:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      fetchRegions();
+    }
+  }, [isOpen]);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -107,9 +131,9 @@ function CityDropdown({ isOpen, onClose, onSelect, currentCity }: CityDropdownPr
         const q = query.toLowerCase();
         const results: Array<{ city: string; region: string; regionId: string }> = [];
 
-        regions.forEach((letterGroup) => {
-          letterGroup.areas.forEach((region) => {
-            region.cities.forEach((city) => {
+        regionsData.forEach((letterGroup) => {
+          letterGroup.areas.forEach((region:any) => {
+            region.cities.forEach((city:any) => {
               if (city.toLowerCase().includes(q)) {
                 results.push({
                   city,
@@ -126,17 +150,17 @@ function CityDropdown({ isOpen, onClose, onSelect, currentCity }: CityDropdownPr
     : [];
 
   const filteredRegions = query.trim()
-    ? regions
+    ? regionsData
         .map((letterGroup) => ({
           ...letterGroup,
           areas: letterGroup.areas.filter(
-            (area) =>
+            (area:any) =>
               area.name.toLowerCase().includes(query.toLowerCase()) ||
-              area.cities.some((city) => city.toLowerCase().includes(query.toLowerCase()))
+              area.cities.some((city:any) => city.toLowerCase().includes(query.toLowerCase()))
           ),
         }))
         .filter((letterGroup) => letterGroup.areas.length > 0)
-    : regions;
+    : regionsData;
 
   if (!isOpen) return null;
 
@@ -205,17 +229,21 @@ function CityDropdown({ isOpen, onClose, onSelect, currentCity }: CityDropdownPr
           </div>
         ) : (
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {filteredRegions.map((letterGroup) => (
+            {isLoading ? (
+  <div className="flex justify-center items-center h-40">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ee3c6b]"></div>
+  </div>
+) : filteredRegions.map((letterGroup) => (
               <div key={letterGroup.letter}>
                 <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-2">
                   {letterGroup.letter}
                 </div>
                 <div className="space-y-2">
-                  {letterGroup.areas.map((region) => (
+                  {letterGroup.areas.map((region:any) => (
                     <div key={region.id}>
                       <div className="text-sm font-medium text-gray-700 px-2 py-1 bg-gray-50 rounded-lg">{region.name}</div>
                       <div className="space-y-1 ml-1 mt-1">
-                        {region.cities.slice(0, 5).map((city) => (
+                        {region.cities.slice(0, 5).map((city:any) => (
                           <button
                             key={city}
                             className="w-full px-3 py-2 text-left text-sm text-gray-600 hover:bg-orange-50 hover:text-orange-600 rounded-md transition-all duration-200"

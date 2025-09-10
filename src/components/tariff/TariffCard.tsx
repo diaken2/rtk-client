@@ -228,14 +228,19 @@ export default function TariffCard({ tariff, onClick }: TariffCardProps) {
           ) : (
             <>
               <button className="w-full bg-gradient-to-r from-[#FF6A2B] to-[#FF4D15] text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 group-hover:scale-105">
-                Подключить за {tariff.connectionPrice !== undefined ? `${tariff.connectionPrice} ₽` : '0 ₽'}
+                Подключить
               </button>
-              
-              {tariff.connectionPrice === 0 && (
-                <div className="text-green-600 text-sm font-medium mt-3">
+            <div className="text-center">
+              {tariff.connectionPrice === 0 || tariff.connectionPrice === undefined ? (
+                <div className="text-green-600 text-sm font-medium">
                   ✓ Бесплатное подключение
                 </div>
+              ) : (
+                <div className="text-gray-600 text-sm">
+                 Подключение — <span>{tariff.connectionPrice} ₽</span>
+                </div>
               )}
+            </div>
             </>
           )}
         </div>

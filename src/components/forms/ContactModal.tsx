@@ -107,38 +107,24 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
           
           <div className="space-y-6">
             {/* Блок 1: Интересует подключение? */}
-            <div className="bg-[#F8F9FA] rounded-[16px] p-6">
-              <h3 className="font-semibold text-lg text-[#1B1B1B] mb-3">Интересует подключение?</h3>
-              <div className="flex items-center mb-2">
-                <div className="w-12 h-12 bg-[#174A8D] rounded-full flex items-center justify-center mr-3">
-                  <svg width={20} height={20} fill="none" viewBox="0 0 24 24">
-                    <path d="M8 9.5C8 8.11929 9.11929 7 10.5 7H13.5C14.8807 7 16 8.11929 16 9.5V14.5C16 15.8807 14.8807 17 13.5 17H10.5C9.11929 17 8 15.8807 8 14.5V9.5Z" fill="#fff"/>
-                  </svg>
-                </div>
-                <div>
-                  <a href="tel:+79956738579" className="text-xl font-bold text-[#174A8D] hover:underline block" style={{letterSpacing: 0.7}}>
-                    8 995 673-85-79
-                  </a>
-                  <div className="text-sm text-[#6E6E6E]">Звонок бесплатный по РФ</div>
-                </div>
+            <div className="bg-[#F8F9FA] rounded-[16px] p-6 text-center">
+              <h3 className="font-semibold text-lg text-[#1B1B1B] mb-4">Интересует подключение?</h3>
+              <div className="flex flex-col items-center">
+                <a href="tel:+79956738579" className="text-xl font-bold text-[#174A8D] hover:underline mb-1" style={{letterSpacing: 0.7}}>
+                  8 800 350-99-10
+                </a>
+                <div className="text-sm text-[#6E6E6E]">Звонок бесплатный по РФ</div>
               </div>
             </div>
 
             {/* Блок 2: Нужна техподдержка? */}
-            <div className="bg-[#F8F9FA] rounded-[16px] p-6">
-              <h3 className="font-semibold text-lg text-[#1B1B1B] mb-3">Нужна техподдержка?</h3>
-              <div className="flex items-center mb-2">
-                <div className="w-12 h-12 bg-[#174A8D] rounded-full flex items-center justify-center mr-3">
-                  <svg width={20} height={20} fill="none" viewBox="0 0 24 24">
-                    <path d="M8 9.5C8 8.11929 9.11929 7 10.5 7H13.5C14.8807 7 16 8.11929 16 9.5V14.5C16 15.8807 14.8807 17 13.5 17H10.5C9.11929 17 8 15.8807 8 14.5V9.5Z" fill="#fff"/>
-                  </svg>
-                </div>
-                <div>
-                  <a href="tel:+78001000800" className="text-xl font-bold text-[#174A8D] hover:underline block" style={{letterSpacing: 0.7}}>
-                    8 800 100-08-00
-                  </a>
-                  <div className="text-sm text-[#6E6E6E]">Звонок бесплатный по РФ</div>
-                </div>
+            <div className="bg-[#F8F9FA] rounded-[16px] p-6 text-center">
+              <h3 className="font-semibold text-lg text-[#1B1B1B] mb-4">Нужна техподдержка?</h3>
+              <div className="flex flex-col items-center">
+                <a href="tel:+78001000800" className="text-xl font-bold text-[#174A8D] hover:underline mb-1" style={{letterSpacing: 0.7}}>
+                  8 800 100-08-00
+                </a>
+                <div className="text-sm text-[#6E6E6E]">Звонок бесплатный по РФ</div>
               </div>
             </div>
           </div>
@@ -147,6 +133,3 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
     </div>
   );
 }
-
-// tailwind: добавьте @keyframes fadeSlide {0%{opacity:0;transform:translateY(-10px);}100%{opacity:1;transform:none;}} и класс animate-fadeSlide
-// для xs-адаптива используйте media-запросы или tailwind breakpoints (<640px — bottom-0 left-0 w-full rounded-t-2xl p-4)

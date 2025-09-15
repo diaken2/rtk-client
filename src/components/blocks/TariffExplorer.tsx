@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -610,6 +609,8 @@ setFilters(prev => ({
     setFilters({ ...defaultFilters });
   };
 
+  const russianTitle = categoryMapping[origservice] || titleservice;
+
   return (
        <div className="flex flex-col min-h-screen">
       {/* Херо-блок с адаптивными стилями */}
@@ -628,7 +629,7 @@ setFilters(prev => ({
       <span className="opacity-50">›</span>
       <span className="hover:underline cursor-pointer">{cityName}</span>
       <span className="opacity-50">›</span>
-      <b className="text-white">{titleservice}</b>
+      <b className="text-white">{russianTitle}</b>
     </nav>
     
     {/* Заголовок */}

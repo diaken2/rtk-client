@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
@@ -44,15 +45,15 @@ type BooleanFilterKey =
   | 'promotions'
   | 'hitsOnly';
 const defaultFilters: Filters = {
-  internet: true,
+  internet: false,
   tv: false,
   mobile: false,
   onlineCinema: false,
   gameBonuses: false,
   promotions: false,
   hitsOnly: false,
-  priceRange: [300, 1700],
-  speedRange: [50, 1000],
+  priceRange: [100, 5000],
+  speedRange: [0, 2000],
 };
 interface TimeSlot {
   value: string;
@@ -408,6 +409,39 @@ export default function TariffExplorer({
   const { isSupportOnly } = useSupportOnly();
   const searchParams = useSearchParams();
   const router = useRouter();
+    const [priceLimits, setPriceLimits] = useState({ min: 100, max: 5000 });
+    const [speedLimits, setSpeedLimits] = useState({ min: 0, max: 1000 });
+     const visibleTariffs = useMemo(() => {
+    return tariffs.filter(tariff => !tariff.hidden);
+  }, [tariffs]);
+useEffect(() => {
+  if (visibleTariffs.length > 0) {
+    const prices = visibleTariffs.map(t => t.price).filter(price => price > 0);
+    const speeds = visibleTariffs.map(t => t.speed || 0).filter(speed => speed > 0);
+    
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const minSpeed = speeds.length > 0 ? Math.min(...speeds) : 0;
+    const maxSpeed = speeds.length > 0 ? Math.max(...speeds) : 1000;
+    
+    setPriceLimits({
+      min: Math.max(100, Math.floor(minPrice / 100) * 100),
+      max: Math.min(10000, Math.ceil(maxPrice / 100) * 100)
+    });
+
+    setSpeedLimits({
+      min: 0, // Минимальная скорость всегда 0
+      max: Math.max(1000, Math.ceil(maxSpeed / 100) * 100)
+    });
+
+    // Устанавливаем фильтры по умолчанию
+    setFilters(prev => ({
+      ...prev,
+      priceRange: [minPrice, maxPrice],
+      speedRange: [0, maxSpeed] // Начинаем с 0 чтобы включить все тарифы
+    }));
+  }
+}, [visibleTariffs]);
 
   const categoryMapping = useMemo((): Record<string, string> => ({
     internet: "Интернет",
@@ -447,7 +481,7 @@ const hasActiveFilters =
 filters.internet || filters.tv || filters.mobile ||
 filters.onlineCinema || filters.gameBonuses;
 
-return tariffs.filter((tariff) => {
+return visibleTariffs.filter((tariff) => {
 const typeKey = getTariffTypeKey(tariff.type || "");
 const featureText = `${tariff.name ?? ''} ${(tariff.features || []).join(' ')}`.toLowerCase();
 
@@ -495,7 +529,7 @@ const speedMatch =
 
 return categoryMatch && sidebarMatch && promoMatch && hitsMatch && priceMatch && speedMatch;
 });
-}, [tariffs, filters, activeCategory]);
+}, [visibleTariffs, filters, activeCategory]);
 
 
 
@@ -671,8 +705,8 @@ setFilters(prev => ({
               </div>
               <Slider
                 range
-                min={300}
-                max={1700}
+                min={priceLimits.min}
+                max={priceLimits.max}
                 value={filters.priceRange}
                 onChange={(value) => Array.isArray(value) && handleFilterChange({ priceRange: value })}
                 trackStyle={[{ backgroundColor: '#FF6600' }]}
@@ -689,8 +723,8 @@ setFilters(prev => ({
               </div>
               <Slider
                 range
-                min={50}
-                max={1000}
+                min={speedLimits.min}
+                max={speedLimits.max}
                 value={filters.speedRange}
                 onChange={(value) => Array.isArray(value) && handleFilterChange({ speedRange: value })}
                 trackStyle={[{ backgroundColor: '#FF6600' }]}

@@ -44,7 +44,7 @@ export default async function CityPrivacyPage({ params }: { params: Promise<{ ci
     return (
       <>
         <SetCityEffect city={data.meta.name} />
-        <PrivacyClient />
+        <PrivacyClient cityName={data.meta.name} />
       </>
     );
   } catch (error) {

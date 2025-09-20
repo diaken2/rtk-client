@@ -81,7 +81,7 @@ return cityName ? `/${cityName}${path}` : path;
             © 2025 Сайт не является средством массовой информации и действует на
             основании партнёрского договора с Ростелеком.
           </p>
-          <Link href="/privacy" className="hover:underline">
+          <Link href={getPrefixedHref(cityName, "/policy")} className="hover:underline">
             Политика обработки персональных данных
           </Link>
         </div>

@@ -4,7 +4,9 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
-export default function PrivacyContent() {
+export default function PrivacyContent({citySlug}:any) {
+
+  
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -161,7 +163,7 @@ export default function PrivacyContent() {
         </div>
       </main>
 
-      <Footer cityName="в России" />
+      <Footer cityName={citySlug}/>
     </div>
   );
 }

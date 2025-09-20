@@ -18,7 +18,7 @@ export default function Header() {
   const { isSupportOnly } = useSupportOnly();
   const router = useRouter();
   const { setCity, city } = useCity();
-
+const citySlug = city && city.trim().length > 0 ? slugifyCityName(city) : "moskva";
   const services = [
     { name: "Интернет", filter: "internet" },
     { name: "Интернет + ТВ", filter: "internet-tv" },
@@ -132,7 +132,7 @@ const handleServiceClick = (filter: string) => {
               
               {/* Ссылка "Контакты" скрыта при режиме поддержки */}
               {!isSupportOnly && (
-                <Link href="/contacts" className="font-medium text-gray-700 hover:text-rt-cta transition-colors">
+                <Link href={`/${citySlug}/contacts`} className="font-medium text-gray-700 hover:text-rt-cta transition-colors">
                   Контакты
                 </Link>
               )}
@@ -209,7 +209,7 @@ const handleServiceClick = (filter: string) => {
               {/* Ссылка "Контакты" скрыта при режиме поддержки */}
               {!isSupportOnly && (
                 <Link 
-                  href="/contacts" 
+                  href={`/${citySlug}/contacts`}
                   className="block py-2 text-gray-700 hover:text-rt-cta transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >

@@ -629,42 +629,49 @@ export default function HeroAddressSearch() {
     setIsCallRequestModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const newError = {
-      address: !form.address.trim(),
-      phone: !/^(\+7|8)?[\d\s-]{10,15}$/.test(form.phone),
-    };
-
-    setError(newError);
-
-    if (newError.address || newError.phone) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const result = await submitLead({
-        type: "Поиск тарифов по адресу",
-        phone: form.phone,
-        address: form.address,
-      });
-
-      if (result.success) {
-        router.push("/complete");
-      } else {
-        console.error("Failed to submit lead:", result.error);
-        router.push("/complete");
-      }
-    } catch (error) {
-      console.error("Error submitting lead:", error);
-      router.push("/complete");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const newError = {
+    address: !form.address.trim(),
+    phone: !/^(\+7|8)?[\d\s-]{10,15}$/.test(form.phone),
   };
+
+  setError(newError);
+
+  if (newError.address || newError.phone) {
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    // Формируем полный адрес с городом
+    const fullAddress = city && city.trim().length > 0 
+      ? `${city}, ${form.address}`
+      : form.address;
+
+    const result = await submitLead({
+      type: "Поиск тарифов по адресу",
+      phone: form.phone,
+      address: fullAddress, // Используем полный адрес с городом
+    });
+    
+    console.log('адресс', fullAddress); // Логируем полный адрес
+
+    if (result.success) {
+      router.push("/complete");
+    } else {
+      console.error("Failed to submit lead:", result.error);
+      router.push("/complete");
+    }
+  } catch (error) {
+    console.error("Error submitting lead:", error);
+    router.push("/complete");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const benefits = [
     { icon: "/icons/abons.svg", text: "11 млн. абонентов" },

@@ -1633,12 +1633,12 @@ function InternetTVPageContent() {
       
       
       {/* Модальные окна */}
-      <SegmentationModal
+      {/* <SegmentationModal
         isOpen={isSegmentationModalOpen}
         onClose={() => setIsSegmentationModalOpen(false)}
         onNewConnection={() => setIsConnectionModalOpen(true)}
         onExistingConnection={() => setIsConnectionModalOpen(true)}
-      />
+      /> */}
       <ContactModal 
         isOpen={isContactModalOpen} 
         onClose={() => setIsContactModalOpen(false)} 

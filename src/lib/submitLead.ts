@@ -9,6 +9,9 @@ export interface LeadData {
   category?: string;
   supportValue?: string;
   otherValue?: string;
+    tariffName?: string; // Добавьте это
+  tariffPrice?: number; // Добавьте это
+  tariffSpeed?: number; // Добавьте это
 }
 
 export async function submitLead(data: LeadData): Promise<{ success: boolean; error?: string }> {

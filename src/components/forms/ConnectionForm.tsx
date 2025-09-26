@@ -9,14 +9,14 @@ import Link from 'next/link';
 interface ConnectionFormProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedTariff?: any; // Добавьте это (опционально)
 }
-
 interface TimeSlot {
   value: string;
   label: string;
 }
 
-export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps) {
+export default function ConnectionForm({ isOpen,selectedTariff, onClose }: ConnectionFormProps) {
   // показываем форму сразу, убираем выбор "Вас интересует"
   const [step, setStep] = useState<'form'>('form');
   // по умолчанию считаем, что это новое подключение
@@ -35,7 +35,8 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
   const modalRef = useRef<HTMLDivElement>(null);
   const timeDropdownRef = useRef<HTMLDivElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
-
+  console.log("connectionformselectedtariff:", selectedTariff)
+console.log('connectionform')
   // Определяем мобильное устройство
   useEffect(() => {
     const checkMobile = () => {
@@ -231,13 +232,26 @@ export default function ConnectionForm({ isOpen, onClose }: ConnectionFormProps)
       const selectedSlot = timeSlots.find(slot => slot.value === selectedTime);
       const cleanPhone = phone.replace(/\D/g, '');
       const fullPhone = `+7${cleanPhone}`;
-
+ console.log('тариффы',{
+        type: requestType === 'new' ? 'Заявка на подключение' : 'Вопрос по подключению',
+        name: name,
+        phone: fullPhone,
+        callTime: selectedSlot?.label || selectedTime,
+         tariffName: selectedTariff?.name || 'Не указан', // Добавьте название тарифа
+      tariffPrice: selectedTariff?.price || 0, // Добавьте цену тарифа
+      tariffSpeed: selectedTariff?.speed || 0, // Добавьте скорость тарифа
+      })
       await submitLead({
         type: requestType === 'new' ? 'Заявка на подключение' : 'Вопрос по подключению',
         name: name,
         phone: fullPhone,
         callTime: selectedSlot?.label || selectedTime,
+         tariffName: selectedTariff?.name || 'Не указан', // Добавьте название тарифа
+      tariffPrice: selectedTariff?.price || 0, // Добавьте цену тарифа
+      tariffSpeed: selectedTariff?.speed || 0, // Добавьте скорость тарифа
       });
+
+     
 
       setTimeout(() => {
         setPhone('');

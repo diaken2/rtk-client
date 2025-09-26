@@ -6,9 +6,9 @@ interface SegmentationModalProps {
   onClose: () => void;
   onNewConnection: () => void;
   onExistingConnection: () => void;
+  selectedTariff: any; // Добавьте это
 }
-
-export default function SegmentationModal({ isOpen, onClose, onNewConnection, onExistingConnection }: SegmentationModalProps) {
+export default function SegmentationModal({ isOpen, onClose, selectedTariff, onNewConnection, onExistingConnection }: SegmentationModalProps) {
   const [step, setStep] = useState<'choose' | 'existing' | 'final'>('choose');
   const [existingChoice, setExistingChoice] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);

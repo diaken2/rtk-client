@@ -14,6 +14,9 @@ interface LeadData {
   category?: string;
   supportValue?: string;
   otherValue?: string;
+   tariffName?: string;
+  tariffPrice?: number;
+  tariffSpeed?: number;
 }
 
 async function sendTelegramMessage(message: string) {
@@ -54,7 +57,19 @@ function formatLeadMessage(data: LeadData): string {
   let message = `🚨 <b>НОВАЯ ЗАЯВКА</b>\n\n`;
   message += `📅 <b>Дата:</b> ${timestamp}\n`;
   message += `📋 <b>Тип:</b> ${data.type}\n\n`;
-
+  if (data.tariffName) {
+    message += `📊 <b>ВЫБРАННЫЙ ТАРИФ</b>\n`;
+    message += `📛 <b>Название:</b> ${data.tariffName}\n`;
+    
+    if (data.tariffPrice) {
+      message += `💰 <b>Цена:</b> ${data.tariffPrice} руб./мес\n`;
+    }
+    
+    if (data.tariffSpeed) {
+      message += `⚡ <b>Скорость:</b> ${data.tariffSpeed} Мбит/с\n`;
+    }
+    message += `\n`;
+  }
   if (data.name) {
     message += `👤 <b>Имя:</b> ${data.name}\n`;
   }
@@ -90,7 +105,7 @@ function formatLeadMessage(data: LeadData): string {
   }
 
   message += `\n🔗 <b>Источник:</b> rostelecom-tariffs.ru`;
-
+console.log(message)
   return message;
 }
 

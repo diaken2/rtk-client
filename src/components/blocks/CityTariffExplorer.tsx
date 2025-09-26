@@ -401,14 +401,19 @@ export default function CityTariffExplorer({
   const [activeCategory, setActiveCategory] = useState("all");
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>({ ...defaultFilters });
+    const [selectedTariff, setSelectedTariff] = useState<any>(null);
   const { isSupportOnly } = useSupportOnly();
   const searchParams = useSearchParams();
   const router = useRouter();
     const [priceLimits, setPriceLimits] = useState({ min: 100, max: 5000 });
     const [speedLimits, setSpeedLimits] = useState({ min: 0, max: 1000 });
+ console.log('выбранный тарифф:', selectedTariff)
      const visibleTariffs = useMemo(() => {
     return tariffs.filter(tariff => !tariff.hidden);
   }, [tariffs]);
+
+
+     
 useEffect(() => {
   if (visibleTariffs.length > 0) {
     const prices = visibleTariffs.map(t => t.price).filter(price => price > 0);
@@ -789,7 +794,11 @@ const isAllCategory =
   <TariffCard
     key={tariff.id}
     tariff={tariff}
-    onClick={() => setIsSegmentationModalOpen(true)}
+    onClick={() => {
+      console.log("Тарифф:",tariff)
+      setSelectedTariff(tariff);
+      setIsSegmentationModalOpen(true)
+    }}
   />
 ))}
             </div>
@@ -864,11 +873,16 @@ const isAllCategory =
       {/* модалки */}
 <SegmentationModal
   isOpen={isSegmentationModalOpen}
-  onClose={() => setIsSegmentationModalOpen(false)}
+  onClose={() => {setIsSegmentationModalOpen(false)
+   
+  }}
   onNewConnection={() => setIsConnectionModalOpen(true)}
   onExistingConnection={() => setIsConnectionModalOpen(true)}
+   selectedTariff={selectedTariff}
 />      <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
-      <ConnectionForm isOpen={isConnectionModalOpen} onClose={() => setIsConnectionModalOpen(false)} />
+      <ConnectionForm  selectedTariff={selectedTariff} isOpen={isConnectionModalOpen} onClose={() => {setIsConnectionModalOpen(false)
+          setSelectedTariff(null); // Сбросить при закрытии
+      }} />
       <CallRequestModal isOpen={isCallRequestModalOpen} onClose={() => setIsCallRequestModalOpen(false)} />
       <MobileFiltersDrawer
         open={isMobileFiltersOpen}

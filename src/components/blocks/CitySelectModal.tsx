@@ -22,7 +22,7 @@ useEffect(() => {
     const fetchRegions = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('https://rtk-backend-4m0e.onrender.com/api/regions');
+        const response = await fetch('https://rtk-backend-five.vercel.app/api/regions');
         if (response.ok) {
           const data = await response.json();
           setRegionsData(data);
